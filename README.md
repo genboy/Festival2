@@ -14,4 +14,9 @@ A feature todo list in progress
 
 Actually, a complete new setup would be the best to provide better control and less overhead, ingame and incode.
 
+So this where it's at;
 
+- testing custom UIs for easy controls
+- add option to use Festival in specified levels 
+- moving level default configurations from configs to main control (like area's)
+- split code to separate classes and files 

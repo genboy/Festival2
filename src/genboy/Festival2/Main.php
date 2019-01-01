@@ -68,6 +68,7 @@ class Main extends PluginBase {
 
         /** console output */
         $this->getLogger()->info( Language::translate("enabled-console-msg") );
+        $this->getLogger()->info( Language::translate("language-selected") );
 
     }
 
@@ -87,7 +88,7 @@ class Main extends PluginBase {
 	 */
     public function loadLanguage(){
       $languageCode = $this->options["Language"];
-      $resources = $this->getResources(); // read files in resources folder
+      $resources = $this->getResources("/translation"); // read files in resources /translation folder
       foreach($resources as $resource){
         if($resource->getFilename() === "en.json"){
           $default = json_decode(file_get_contents($resource->getPathname(), true), true);
