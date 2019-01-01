@@ -1,6 +1,6 @@
 <?php declare(strict_types = 1);
-/** src/genboy/Festival/lang/Language.php */
-namespace genboy\Festival\lang;
+/** src/genboy/Festival/Language.php */
+namespace genboy\Festival2;
 
 class Language{
 	public static $instance;

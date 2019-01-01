@@ -1,10 +1,10 @@
-name: Festival
+name: Festival2
 author: Genboy
 version: 2.0-dev
-main: genboy\Festival\Main
+main: genboy\Festival2\Main
 load: POSTWORLD
 api: [3.0.0,4.0.0]
-website: "https://github.com/genboy/Festival"
+website: "https://github.com/genboy/Festival2"
 commands:
   fe:
     description: "Allows you to manage Festival area's and events."
@@ -51,7 +51,7 @@ permissions:
                 description: "Allows access to the Festival flag subcommand."
                 default: op
               festival.command.fe.delete:
-                description: "Allows access to the iProtector delete subcommand."
+                description: "Allows access to the Festival delete subcommand."
                 default: op
               festival.command.fe.whitelist:
                 description: "Allows access to the Festival whitelist subcommand."

@@ -3,34 +3,47 @@
  * Options: Msgtype, Msgdisplay, AutoWhitelist
  * Flags: god, pvp, flight, edit, touch, mobs, animals, effects, msg, passage, drop, tnt, shoot, hunger, perms, falldamage
  */
-namespace genboy\Festival;
-
+namespace genboy\Festival2;
 
 use pocketmine\Server;
+use pocketmine\Player;
+
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
+
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\command\ConsoleCommandSender;
-use pocketmine\level\Position;
-use pocketmine\math\Vector3;
+
 use pocketmine\utils\TextFormat;
 
-use genboy\Festival\lang\Language;
+use genboy\Festival2\Language;
+use genboy\Festival2\Level;
+use genboy\Festival2\Flags;
 
-class Main extends PluginBase implements Listener{
+
+class Main extends PluginBase {
 
     /** @var array[] */
-	public $options        = [];
+	public $options = [];
+
+    /** @var array[] */
+	public $levels = []; // list of level flags
+
+	/** @var Area[]  */
+	public $areas   = []; // list of area objects
+
 
     public function onLoad() : void {
 	}
 
 	public function onEnable() : void {
 
+        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 
-		$this->getServer()->getPluginManager()->registerEvents($this, $this);
-
+        if(!is_dir($this->getDataFolder())){
+			mkdir($this->getDataFolder());
+		}
 
         if(!file_exists($this->getDataFolder() . "config.yml")){
 			$c = $this->getResource("config.yml");
@@ -40,9 +53,6 @@ class Main extends PluginBase implements Listener{
 		}
 
         $c = yaml_parse_file($this->getDataFolder() . "config.yml");
-
-
-		// innitialize configurations & update options
 		if( isset( $c["Options"] ) && is_array( $c["Options"] ) ){
             if(!isset($c["Options"]["Language"])){
 				$c["Options"]["Language"] = 'en';
