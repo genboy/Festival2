@@ -18,23 +18,28 @@ use pocketmine\command\ConsoleCommandSender;
 use pocketmine\utils\TextFormat;
 
 use genboy\Festival2\Language;
-use genboy\Festival2\Level;
-use genboy\Festival2\Flags;
+use genboy\Festival2\Config;
+use genboy\Festival2\Flag;
 
 
 class Main extends PluginBase {
 
     /** @var array[] */
-	public $options = [];
+	public  $config; // obj
 
     /** @var array[] */
-	public $levels = []; // list of level flags
+	public $levels = []; // stack of level objects
+
+	public $levellist  = []; // name associated list
 
 	/** @var Area[]  */
-	public $areas   = []; // list of area objects
+	public $areas   = []; // stack of area objects
+
+	public $arealist  = []; // name associated list
 
 
     public function onLoad() : void {
+        // start a task
 	}
 
 	public function onEnable() : void {
@@ -45,49 +50,41 @@ class Main extends PluginBase {
 			mkdir($this->getDataFolder());
 		}
 
-        if(!file_exists($this->getDataFolder() . "config.yml")){
-			$c = $this->getResource("config.yml");
-			$o = stream_get_contents($c);
-			fclose($c);
-			file_put_contents($this->getDataFolder() . "config.yml", str_replace("DEFAULT", $this->getServer()->getDefaultLevel()->getName(), $o));
-		}
-
-        $c = yaml_parse_file($this->getDataFolder() . "config.yml");
-		if( isset( $c["Options"] ) && is_array( $c["Options"] ) ){
-            if(!isset($c["Options"]["Language"])){
-				$c["Options"]["Language"] = 'en';
-            }
-        }
-
-        $this->options = $c["Options"];
-
-
-        /** load language translation class */
+        /** load */
+        $this->loadConfig();
         $this->loadLanguage();
+        $this->loadLevels();
+        $this->loadAreas();
 
-
-        /** console output */
+        /** console info */
         $this->getLogger()->info( Language::translate("enabled-console-msg") );
         $this->getLogger()->info( Language::translate("language-selected") );
 
     }
 
-
 	public function onDisable() : void {
-
-        /** console output */
         $this->getLogger()->info( Language::translate("disabled-console-msg") );
-
 	}
+
+     /** load Config
+	 * @var plugin Options[]
+     * @file resources/config.yml
+	 */
+    public function loadConfig(){
+
+        $this->config = new Config($this);
+
+    }
 
     /** load language
 	 * @var plugin config[]
-     * @file resources en.json
-     * @file resources nl.json
+     * @file resources/translation en.json
+     * @file resources/translation nl.json
 	 * @var obj Language
 	 */
     public function loadLanguage(){
-      $languageCode = $this->options["Language"];
+
+      $languageCode = $this->config->options["Language"];
       $resources = $this->getResources("/translation"); // read files in resources /translation folder
       foreach($resources as $resource){
         if($resource->getFilename() === "en.json"){
@@ -103,6 +100,49 @@ class Main extends PluginBase {
         $langJson = $default;
       }
       new Language($this, $langJson);
+
+    }
+
+
+    /** Load areas
+	 * @var obj area
+	 * @file areas.json
+	 */
+    public function loadAreas(){
+        if(!file_exists($this->getDataFolder() . 'resources/' . "areas.json")){
+			file_put_contents($this->getDataFolder() . 'resources/' . "areas.json", "[]");
+		}
+        $data = json_decode(file_get_contents($this->getDataFolder() . 'resources/' . "areas.json"), true);
+		if( isset( $data ) && is_array( $data ) ){
+            foreach($data as $datum){
+                $flags = $datum["flags"]; // ..
+                new Area($datum["name"], $datum["desc"], $flags, new Vector3($datum["pos1"]["0"], $datum["pos1"]["1"], $datum["pos1"]["2"]), new Vector3($datum["pos2"]["0"], $datum["pos2"]["1"], $datum["pos2"]["2"]), $datum["level"], $datum["whitelist"], $datum["commands"], $datum["events"], $this);
+            }
+        }
+		$this->saveAreas(); // all save $this->areaList available :)
+    }
+    /** Save areas
+	 * @var obj area
+	 * @file areas.json
+	 */
+	public function saveAreas() : void{
+		$areas = [];
+		foreach($this->areas as $area){
+			$areas[] = ["name" => $area->getName(), "desc" => $area->getDesc(), "flags" => $area->getFlags(), "pos1" => [$area->getFirstPosition()->getFloorX(), $area->getFirstPosition()->getFloorY(), $area->getFirstPosition()->getFloorZ()] , "pos2" => [$area->getSecondPosition()->getFloorX(), $area->getSecondPosition()->getFloorY(), $area->getSecondPosition()->getFloorZ()], "level" => $area->getLevelName(), "whitelist" => $area->getWhitelist(), "commands" => $area->getCommands(), "events" => $area->getEvents()];
+            $this->arealist[strtolower( $area->getName() )] = $area; // name associated area list for inArea check
+		}
+		file_put_contents($this->getDataFolder() . 'resources/' . "areas.json", json_encode($areas));
+	}
+
+
+    /** Load levels
+	 * @var obj area
+	 * @file areas.json
+	 */
+    public function loadLevels(){
+        if(!file_exists($this->getDataFolder() . 'resources/' . "levels.json")){
+			file_put_contents($this->getDataFolder() . 'resources/' . "levels.json", "[]");
+		}
     }
 
 }
