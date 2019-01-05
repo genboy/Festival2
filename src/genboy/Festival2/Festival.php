@@ -7,41 +7,42 @@
  */
 namespace genboy\Festival2;
 
-use genboy\Festival2\utility\Base;
-use genboy\Festival2\utility\Config;
-use genboy\Festival2\utility\Api;
-use genboy\Festival2\utility\Data;
-use genboy\Festival2\utility\EventListener;
+use genboy\Festival2\Setup;
+use genboy\Festival2\Core;
+use genboy\Festival2\EventListener;
 
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
 
 class Festival extends PluginBase implements Listener {
 
-    // obj for server environment
-    public  $base;
-
-    // obj for data source acces
-    public  $data;
+    // obj for status control
+    public  $setup;
 
     // obj for configurations
-    public  $config;
+    public  $core;
+
+    // obj for data control
+    public  $helper;
+
+    // obj for data storage
+    public  $data;
 
     // obj for application control
     public  $api;
 
     public function onLoad() : void {
+
 	}
 
 	public function onEnable() : void {
 
-        $this->loadBase();
-        $this->loadData();
-        $this->loadConfig();
-        $this->loadApi();
-        $this->loadListener();
+        $this->setup = new Setup($this);
 
-        $this->getLogger()->info( "Festival 2 enabled & ready (in development)" );
+        $this->core = new Core($this);
+
+        $this->getLogger()->info( "Festival 2 (in development) enabled & ready" );
+
     }
 
     public function onDisable() : void {
@@ -49,48 +50,5 @@ class Festival extends PluginBase implements Listener {
         $this->getLogger()->info( "Festival 2 disabled" );
 
 	}
-
-
-    /** load Server Environment
-	 */
-    public function loadBase(){
-
-        $this->base = new Base($this);
-
-    }
-
-    /** load Data
-	 */
-    public function loadData(){
-
-        $this->data = new Data($this);
-
-    }
-
-    /** load Configs
-	 */
-    public function loadConfig(){
-
-        $this->config = new Config($this);
-
-    }
-
-
-    /** load Api
-	 */
-    public function loadApi(){
-
-        $this->api = new Api($this);
-
-    }
-
-
-    /** load Listeners
-	 */
-    public function loadListener(){
-
-        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
-
-    }
 
 }
