@@ -6,56 +6,22 @@ load: POSTWORLD
 api: [3.0.0,4.0.0]
 website: "https://github.com/genboy/Festival2"
 commands:
-  fe:
-    description: "Allows you to manage Festival area's and events."
-    usage: "See info: /fe (in development)"
-    permission: festival.command.fe
+  fc:
+    description: "Allows you to manage Festival2 area's and events."
+    usage: "See info: /fc (festival2 command in development)"
+    permission: festival2.command.fc
 permissions:
-  festival:
-    description: "Allows access to all Festival features."
+  festival2:
+    description: "Allows access to all Festival Board features."
     default: false
     children:
-      festival.access:
-        description: "Allows access to editing festival areas and events."
+      festival2.access:
+        description: "Allows access to use genloci."
         default: op
-      festival.command:
-        description: "Allows access to all Festival commands."
+      festival2.command:
+        description: "Allows access to all genloci commands."
         default: false
         children:
-          festival.command.fe:
-            description: "Allows access to the Festival area command."
+          festival2.command.fc:
+            description: "Allows access to the genloci board commands."
             default: op
-            children:
-              festival.command.fe.pos1:
-                description: "Allows access to the Festival pos1 subcommand."
-                default: op
-              festival.command.fe.pos2:
-                description: "Allows access to the Festival pos2 subcommand."
-                default: op
-              festival.command.fe.create:
-                description: "Allows access to the Festival create subcommand."
-                default: op
-              festival.command.fe.list:
-                description: "Allows access to the Festival list subcommand."
-                default: op
-              festival.command.fe.here:
-                description: "Allows access to the Festival here subcommand."
-                default: op
-              festival.command.fe.tp:
-                description: "Allows access to the Festival tp subcommand."
-                default: op
-              festival.command.fe.desc:
-                description: "Allows access to the Festival description subcommand."
-                default: op
-              festival.command.fe.flag:
-                description: "Allows access to the Festival flag subcommand."
-                default: op
-              festival.command.fe.delete:
-                description: "Allows access to the Festival delete subcommand."
-                default: op
-              festival.command.fe.whitelist:
-                description: "Allows access to the Festival whitelist subcommand."
-                default: op
-              festival.command.fe.command:
-                description: "Allows access to the Festival command subcommand."
-                default: op

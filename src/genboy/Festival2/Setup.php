@@ -50,7 +50,7 @@ class Setup {
 
     }
 
-    public function checkStatus() : void{
+    public function checkStatus() : void{ // should become bool to catch status / error
 
         $this->plugin->setup->changeStatus( 0, 'Loading' );
 
@@ -87,11 +87,13 @@ class Setup {
 
 		}
 
+        $cdata = $this->plugin->data['config'];
+
         if( !isset( $conf["options"] ) ){
 
             if( isset( $c["Options"] ) && is_array( $c["Options"] ) ){
 
-                $cdata = $this->formatOldConfigs( $c ); // overwrite old configs in new format
+                $cdata = $this->formatOldConfigs( $c ); // overwrite configs from old yml in new format
 
                 $this->plugin->setup->changeStatus( 2, 'yml config setup');
 
@@ -103,7 +105,7 @@ class Setup {
 
                 $this->plugin->setup->changeStatus( 2, 'default config setup' );
 
-                $this->plugin->getLogger()->info( "Festival Default Presets loaded" );
+                $this->plugin->getLogger()->info( "Festival Default config loaded" );
 
             }
 
@@ -136,13 +138,12 @@ class Setup {
         }
 
         $this->plugin->helper->saveSource( 'config', $cdata, 'json');
+
         $this->plugin->helper->saveSource( 'levels', $lvls, 'json');
 
+        $this->plugin->getLogger()->info( "Festival Level defaults saved" );
+
         $this->plugin->data = $this->plugin->helper->getResources(); // reload data
-
-        $this->plugin->setup->changeStatus( 3, 'Configs Ready' );
-
-        $this->plugin->getLogger()->info( "Festival Level defaults loaded" );
 
     }
 

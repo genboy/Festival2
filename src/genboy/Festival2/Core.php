@@ -22,8 +22,6 @@ class Core{
 
         $this->plugin->helper = new Helper($plugin); // $this->plugin->data load
 
-        $this->plugin->getServer()->getPluginManager()->registerEvents(new EventListener($plugin), $plugin);
-
         $this->plugin->setup->checkStatus(); //var_dump($this->plugin->data['config']);
 
     }
