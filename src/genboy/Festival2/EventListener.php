@@ -3,21 +3,33 @@
 
 namespace genboy\Festival2;
 
-use pocketmine\event\Listener;
-use pocketmine\level\Position;
-use pocketmine\math\Vector3;
-use pocketmine\command\Command;
-use pocketmine\command\CommandSender;
 
 use genboy\Festival2\Festival;
-use genboy\Festival2\Helper;
+
+use pocketmine\plugin\PluginBase;
+use pocketmine\event\Listener;
+use pocketmine\Server;
+
+use pocketmine\Player;
+use pocketmine\event\player\PlayerJoinEvent; // use pocketmine\event\player\PlayerChatEvent;
+use pocketmine\utils\TextFormat;
+use pocketmine\item\Item;
 
 class EventListener implements Listener{
 
+    /** @var Festival */
     private $plugin;
 
 	public function __construct(Festival $plugin){
-		$this->plugin = $plugin;
+
+        $this->plugin = $plugin;
+
+        $plugin->getServer()->getPluginManager()->registerEvents($this, $plugin);
+
+	}
+
+	public function onJoin(PlayerJoinEvent $event) {
+		$event->getPlayer()->sendMessage("This is an example event!"); # Sends the message to the player that joined the server
 	}
 
 }

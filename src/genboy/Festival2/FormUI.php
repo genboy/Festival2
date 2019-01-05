@@ -6,7 +6,6 @@ namespace genboy\Festival2;
 
 use genboy\Festival2\Festival;
 
-use genboy\Festival2\CustomUI\CustomFormUI as FestivalFormUI;
 use genboy\Festival2\CustomUI\CustomForm;
 use genboy\Festival2\CustomUI\SimpleForm;
 

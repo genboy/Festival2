@@ -20,8 +20,6 @@ class Core{
 
         $this->plugin = $plugin;
 
-        $this->plugin->helper = new Helper($plugin); // $this->plugin->data load
-
         $this->plugin->setup->checkStatus(); //var_dump($this->plugin->data['config']);
 
     }
