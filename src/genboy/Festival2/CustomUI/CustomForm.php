@@ -51,6 +51,7 @@ class CustomForm extends Form {
         $this->labelMap[] = $label ?? count($this->labelMap);
     }
 
+
     /**
      * @param string $text
      * @param bool|null $default
