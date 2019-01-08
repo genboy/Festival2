@@ -6,8 +6,6 @@
  */
 namespace genboy\Festival2;
 
-use pocketmine\utils\Config;
-
 use genboy\Festival2\Festival;
 
 class Helper {
@@ -18,46 +16,10 @@ class Helper {
 
         $this->plugin = $plugin;
 
-        $this->loadData();
-
     }
 
-    public function loadData() : void {
 
-       $this->plugin->data = $this->getResources();
-
-       $this->plugin->getLogger()->info( "Festival Data loaded" );
-
-    }
-
-    public function getResources() : ARRAY {
-
-        $data = [];
-
-        $sourcelist = [ 'config', 'levels', 'areas' ]; // 'events', 'commands'
-
-        if(!is_dir($this->plugin->getDataFolder())){
-            @mkdir($this->plugin->getDataFolder());
-		}
-
-        if( !is_dir($this->plugin->getDataFolder().'resources') ){
-            @mkdir($this->plugin->getDataFolder().'resources');
-		}
-
-        foreach($sourcelist as $nm){
-
-            if(!file_exists($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $nm . ".json")){
-                file_put_contents($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $nm . ".json", "[]");
-            }
-            $data[ $nm ] = $this->getSource( $nm );
-
-        }
-
-        return $data;
-
-    }
-
-    public function getInfo() : ARRAY {
+    public function getServerInfo() : ARRAY {
 
         $s = [];
 
@@ -91,22 +53,25 @@ class Helper {
 
     }
 
-    public function getSource(  $name, $type = 'json') : ARRAY {
+    public function getSource( $name , $type = 'json' ) : ARRAY {
 
-        switch( $type ){
+        if( file_exists($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".". $type)){
 
-            case 'yml':
-            case 'yaml':
-                $data = yaml_parse_file($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".yml"); // the old defaults
-            break;
+            switch( $type ){
 
-            case 'json':
-            default:
-                $data = json_decode( file_get_contents( $this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".json" ), true );
-            break;
+                case 'yml':
+                case 'yaml':
+                    $data = yaml_parse_file($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".yml"); // the old defaults
+                break;
+
+                case 'json':
+                default:
+                    $data = json_decode( file_get_contents( $this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".json" ), true );
+                break;
+
+            }
 
         }
-
         if( isset( $data ) && is_array( $data ) ){
             return $data;
         }

@@ -1,161 +1,127 @@
 <?php declare(strict_types = 1);
-/** src/genboy/Festival2/Setup.php
- *
- * setup helper
- *
- */
+/** src/genboy/Festival/EventListener.php */
+
 namespace genboy\Festival2;
 
-use pocketmine\utils\Config;
 use genboy\Festival2\Festival;
+use genboy\Festival2\Data;
+
+use pocketmine\utils\TextFormat;
 
 class Setup {
 
+    /** @var Festival */
     private $plugin;
 
-    public $id;
+    private $data;
 
-    public $text;
-
-    public $types;
-
-    public function __construct(Festival $plugin){
+	public function __construct(Festival $plugin, Data $data){
 
         $this->plugin = $plugin;
 
-        $this->types = [
-          0 => 'load',
-          1 => 'install',
-          2 => 'config',
-          3 => 'ready',
-        ];
+        $this->data = $data;
 
-        $this->id = 0;
-        $this->text = 'Loading';
+        $this->checkPluginData();
 
-    }
+	}
 
-    public function changeStatus( $id, $text = false ) : void{
+    public function checkPluginData(){
 
-        if( isset( $this->types[$id] ) ){
-
-            $this->id = $id;
-
-            if($text){
-                $this->text = $text;
-            }else{
-                $this->text = $this->types[$id];
-            }
-        }
-
-    }
-
-    public function checkStatus() : void{ // should become bool to catch status / error
-
-        $this->plugin->setup->changeStatus( 0, 'Loading' );
-
-        $d = $this->plugin->data;
-
-        if( isset( $d['config']['options'] ) && is_array( $d['config']['options'] ) && isset( $d['config']['levels'] ) && is_array( $d['config']['levels'] ) ){
-
-            $this->plugin->setup->changeStatus( 3, 'Ready' );
-
-        }else{
-
-            $this->plugin->setup->changeStatus( 1, 'Install & Setup' );
-
-            $this->checkPresetConfig();
-
-        }
-
-    }
-
-    public function checkPresetConfig() : void{
-
-        // check if json config defaults
-        $conf = $this->plugin->data['config'];
-        $lvls = $this->plugin->data['levels'];
-
-        // check & import from old yml config
-        if( file_exists($this->plugin->getDataFolder() . "config.yml") ){
-
-            $c = yaml_parse_file($this->plugin->getDataFolder() . "config.yml"); // some original old defaults
-
-		}else if( file_exists($this->plugin->getDataFolder() . "resources/" . "config.yml") ){
-
-            $c = yaml_parse_file($this->plugin->getDataFolder() . "resources/" . "config.yml"); // the old defaults
-
+        $status = 1;
+        if(!is_dir($this->plugin->getDataFolder())){
+            @mkdir($this->plugin->getDataFolder());
+            $status = 0;
 		}
 
-        $cdata = $this->plugin->data['config'];
+        if( !is_dir($this->plugin->getDataFolder().'resources') ){
+            @mkdir($this->plugin->getDataFolder().'resources');
+            $status = 0;
+		}
 
-        if( !isset( $conf["options"] ) ){
-
-            if( isset( $c["Options"] ) && is_array( $c["Options"] ) ){
-
-                $cdata = $this->formatOldConfigs( $c ); // overwrite configs from old yml in new format
-
-                $this->plugin->setup->changeStatus( 2, 'yml config setup');
-
-                $this->plugin->getLogger()->info( "Festival YML config loaded" );
-
-            }else{
-
-                $cdata = $this->newPresets(); // preset defaults
-
-                $this->plugin->setup->changeStatus( 2, 'default config setup' );
-
-                $this->plugin->getLogger()->info( "Festival Default config loaded" );
-
+        $srcfiles = ['config','levels','areas'];
+        foreach( $srcfiles as $name ){
+            if(!file_exists($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".json")){
+                file_put_contents($this->plugin->getDataFolder() . "resources" . DIRECTORY_SEPARATOR . $name . ".json", "");
+                $status = 0;
             }
+        }
 
+        if( $status == 0 ){
+
+            $this->plugin->getLogger()->info( "Festival installing..." );
 
         }
 
-
-        if( !isset( $lvls[0] ) || !is_array( $lvls[0] ) ){
-
-            $preset = $this->newPresets(); // preset defaults
-            $lvls = $preset['worlds'];
-
-            if( isset( $c["Worlds"] ) && is_array( $c['Worlds'] ) ){
-                $setlvls = $c['Worlds'];
-            }else if( isset( $cdata['worlds'] ) && is_array( $cdata['worlds'] ) ){
-                $setlvls = $cdata['worlds'];
-            }
-
-            foreach( $setlvls as $ln => $set ){
-                if( $ln == "DEFAULT" ){
-                    $ln = $this->plugin->getServer()->getDefaultLevel()->getName();
-                }
-                $lvls[$ln] = $set;
-            }
-
-            if( isset($cdata['worlds'] ) ){
-                unset( $cdata['worlds'] );
-            }
+        $this->data->loadConfig();
+        $cdata = $this->data->getConfig();
+        if( !isset( $cdata ) || !isset( $cdata['options'] ) || !is_array( $cdata['options'] ) ){
+            $this->newConfigs();
 
         }
 
-        $this->plugin->helper->saveSource( 'config', $cdata, 'json');
+        $this->data->loadLevels();
+        $ldata = $this->data->getLevels();
+        if( !isset( $ldata[0] ) ){
+            $this->newLevels();
+        }
 
-        $this->plugin->helper->saveSource( 'levels', $lvls, 'json');
+        $this->data->loadAreas();
+        $adata = $this->data->getAreas();
+        if( !isset( $adata[0] ) ){
+            $this->newAreas();
+        }
 
-        $this->plugin->getLogger()->info( "Festival Level defaults saved" );
 
-        $this->plugin->data = $this->plugin->helper->getResources(); // reload data
 
     }
 
-    public function newPresets() : ARRAY {
+    public function newConfigs(){
+
+        // check for config.yml
+        $newconfig = $this->newConfigPreset();
+        $ymldata = $this->plugin->helper->getSource( "config", "yml" );
+        if( isset( $ymldata ) && isset( $ymldata['Options'] ) && is_array( $ymldata['Options'] ) ){
+            $newconfig = $this->formatOldConfigs( $ymldata );
+        }
+        $this->data->saveConfig( $newconfig );
+
+    }
+
+
+    public function newLevels(){
+
+        // create a list of current levels with loaded configs
+        $config  = $this->data->getConfig();
+        $worldlist = $this->plugin->helper->getServerWorlds();
+        if( is_array( $worldlist ) ){
+            $ldata[] = [ "name" => "DEFAULT", "desc" => "Level DEFAULT", "flags" => $config['defaults'] ];
+            foreach( $worldlist as $ln){
+                $ldata[] = [ "name" => $ln, "desc" => "Level ". $ln, "flags" => $config['defaults'] ];
+            }
+            $this->data->saveLevels( $ldata );
+        }
+
+
+    }
+
+    public function newAreas(){
+
+        // check for areas.config
+        $this->data->saveAreas( [] );
+        $this->plugin->getLogger()->info( "Festival no area's loaded; replace resources/areas.json" );
+
+    }
+
+    public function newConfigPreset() : ARRAY {
 
         // world / area defaults
         $c = [
         'options' =>[
-            'msgdsp'        => 'op',    // msg display off,op,listed,on
-            'msgpos'        => 'msg',   // msg position msg,title,tip,pop
-            'areadsp'       => 'op',    // area title display off,op,listed,on
-            'autolist'      => 'on',    // area creator auto whitelist off,on
+            'itemid'    =>  201,     // Purpur Pillar itemid key held item
+            'msgdsp'     => 'op',    // msg display off,op,listed,on
+            'msgpos'     => 'msg',   // msg position msg,title,tip,pop
+            'areadsp'    => 'op',    // area title display off,op,listed,on
+            'autolist'   => 'on',    // area creator auto whitelist off,on
         ],
         'defaults' =>[
 
@@ -179,26 +145,15 @@ class Setup {
             'animals'   => true,
             'cmd'       => true,
 
-        ],
-        'worlds' =>[]
-        ];
-
-        $lvlspreset = [];
-        $lvlist = $this->plugin->helper->getServerWorlds();
-        if( is_array($lvlist) ){
-            foreach($lvlist as $lvl){
-                $c['worlds'][$lvl] = $c['defaults'];
-            }
-        }
+        ]];
 
         return $c;
 
     }
 
-
     public function formatOldConfigs( $c ) : ARRAY {
 
-        $p = $this->newPresets();
+        $p = $this->newConfigPreset();
 
         // overwrite default presets
         if( isset( $c['Options']['Msgdisplay'] ) ){
@@ -222,20 +177,24 @@ class Setup {
                 }
             }
         }
+        $this->plugin->getLogger()->info( "Festival config.yml option data used" );
 
         if( isset( $c['Worlds'] ) && is_array( $c['Worlds'] ) ){
-            foreach( $c['Worlds'] as $ln => $level){
-                if( $ln == "DEFAULT" ){
+            $ldata = [];
+            foreach( $c['Worlds'] as $ln => $lvlflags){
+                /*if( $ln == "DEFAULT" ){
                     $ln = $this->plugin->getServer()->getDefaultLevel()->getName();
-                }
-                foreach( $level as $f => $set ){
-
+                }*/
+                $newflags = [];
+                foreach( $lvlflags as $f => $set ){
                     $flagname = $this->isFlag( $f );
-
-                    $p['worlds'][$ln][$flagname] = $set;
-
+                    $newflags[$flagname] = $this->isFlag( $f );
                 }
+                $ldata[] = [ "name" => $ln, "desc" => "Level ". $ln, "flags" => $newflags ];
             }
+            $this->data->saveLevels( $ldata );
+
+            $this->plugin->getLogger()->info( "Festival config.yml level data used" );
         }
 
         return $p;
