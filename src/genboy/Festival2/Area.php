@@ -100,13 +100,12 @@ class Area{
 	public function setFlag(string $flag, bool $value) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = $value;
-			$this->plugin->saveAreas();
-
 			return true;
 		}
 
 		return false;
 	}
+
 
 	/**
 	 * @return string[]
@@ -123,7 +122,6 @@ class Area{
 			}
 		}
 		return $arr;
-
 	}
 
 	/**
@@ -201,7 +199,7 @@ class Area{
 	public function toggleFlag(string $flag) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = !$this->flags[$flag];
-			$this->plugin->saveAreas();
+			$this->plugin->data->saveAreas();
 
 			return $this->flags[$flag];
 		}
@@ -244,7 +242,7 @@ class Area{
 		if($value){
 			if(!in_array($name, $this->whitelist)){
 				$this->whitelist[] = $name;
-				$this->plugin->saveAreas();
+				$this->plugin->data->saveAreas();
 
 				return true;
 			}
@@ -252,7 +250,7 @@ class Area{
 			if(in_array($name, $this->whitelist)){
 				$key = array_search($name, $this->whitelist);
 				array_splice($this->whitelist, $key, 1);
-				$this->plugin->saveAreas();
+				$this->plugin->data->saveAreas();
 
 				return true;
 			}
@@ -270,7 +268,7 @@ class Area{
 
 	public function delete() : void{
 		unset($this->plugin->areas[$this->getName()]);
-		$this->plugin->saveAreas();
+		$this->plugin->data->saveAreas();
 	}
 
 	public function save() : void{

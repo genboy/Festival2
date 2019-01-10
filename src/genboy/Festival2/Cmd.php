@@ -17,32 +17,39 @@ class Cmd{
 
     private $plugin;
 
+    /**  __construct
+	 * @param CommandSender $sender
+	 * @param Command $cmd
+	 * @param string $label
+	 * @param array $args
+	 * @param Festival $plugin
+     */
     public function __construct( CommandSender $sender, Command $cmd, string $label, array $args, Festival $plugin){
-
         $this->plugin = $plugin;
-
         if( $cmd->getName() == "fc" ) {
-
             $playerName = strtolower($sender->getName());
             $action = strtolower($args[0]);
             $o = "";
+
             switch($action){
-                case "config": // festival 2
-                case "c":
-                    $this->plugin->form->openConfig($sender);
-                    $o = TextFormat::GREEN . "Config Festival";
-                break;
+
                 case "form": // festival 2
                 default:
-                    $this->plugin->form->openUI($sender);
-                    $o = TextFormat::GREEN . "Manage Festival";
+                    $this->getUIForm();
                 break;
 
             }
-            $sender->sendMessage($o);
-
+            //$o = TextFormat::GREEN . "Manage Festival";
+            //$sender->sendMessage($o);
         }
+    }
 
+    /** getUIForm
+	 * @class FormUI
+	 * @func FormUI->openUI
+     */
+    public function getUIForm(){
+        $this->plugin->form->openUI($sender);
     }
 
 }

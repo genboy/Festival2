@@ -1,113 +1,106 @@
 <?php declare(strict_types = 1);
-/**
- * src/genboy/Festival/Festival.php
- *
- * Main class plugin
- *
- */
+/** src/genboy/Festival/EventListener.php */
+
 namespace genboy\Festival2;
 
-use genboy\Festival2\Setup;
-use genboy\Festival2\Core;
+use genboy\Festival2\Cmd;
+use genboy\Festival2\Helper;
 use genboy\Festival2\FormUI;
-use genboy\Festival2\EventListener;
+use genboy\Festival2\Events;
 
 use pocketmine\plugin\PluginBase;
-use pocketmine\event\Listener;
-use pocketmine\Server;
-
 use pocketmine\Player;
 use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\utils\TextFormat;
-use pocketmine\item\Item;
 
-class Festival extends PluginBase implements Listener {
+class Festival extends PluginBase {
 
-    // obj for status control
-    public  $setup;
+    public $config;
 
-    // obj for configurations
-    public  $core;
+    public $defaults;
 
-    // obj for data control
-    public  $helper;
+    public $form;
 
-    // obj for listener
-    public  $listener;
+    public $levels;
 
-    // obj for data storage
-    public  $data;
+    public $areas;
 
-    // obj for Forms
-    public  $form;
+    public $players;
 
-    // obj for application control
-    public  $api;
 
-    public function onLoad() : void {
+    public function onEnable() : void {
 
-	}
+        $this->getServer()->getPluginManager()->registerEvents( new Events($this), $this );
 
-	public function onEnable() : void {
-
-        //$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
-
-        $this->helper = new Helper($this); // $this->plugin->data load
-
-        $this->listener = new EventListener($this); // $this->plugin->data load
-
-        $this->setup = new Setup($this);
+        $this->helper = new Helper($this);
 
         $this->form = new FormUI($this);
 
-        $this->core = new Core($this);
+        $this->dataSetup();
+    }
 
-        $this->getLogger()->info( "Festival 2 (in development) enabled & ready" );
+    /** dataSetup
+	 * @class Helper
+	 * @func Helper->getSource
+	 * @var $plugin->options
+     */
+    public function dataSetup(): bool{
+
+        // check config file and defaults
+        $config = $this->helper->getSource( "config" );
+        if( isset( $config["options"] ) && is_array( $config["options"] ) ){
+            $this->config = $config;
+        }else{
+
+            $oldconfig = $this->helper->getSource( "config", "yml" );
+
+            //var_dump( $oldconfig );
+
+            if( isset( $oldconfig["Options"] ) && is_array( $oldconfig["Options"] ) && isset( $oldconfig["Default"] ) && is_array( $oldconfig["Default"] ) ){
+                $this->config = $this->helper->formatOldConfigs( $oldconfig );
+            }else{
+                $this->config = $this->helper->newConfigPreset();
+                $this->getLogger()->info( "Festival config.yml not found, default configurations loaded!" );
+            }
+
+
+        }
+        $this->helper->saveSource( "config", $this->config );
+
+        // check level defaults
+        if( !is_array($this->levels) ){
+            $this->helper->loadDefaultLevels();
+        }
+
+        // check areas
+        if( !$this->helper->loadAreas() || !is_array( $this->areas) ){
+            $this->helper->loadDefaultAreas();
+            $this->getLogger()->info( "Festival has no area's to load, yet!" );
+        }
+        return true;
 
     }
 
-    public function onDisable() : void {
-
-        $this->getLogger()->info( "Festival 2 disabled" );
-
-	}
-
-	public function onCommand(CommandSender $sender, Command $cmd, string $label, array $args) : bool{
-
+    /** onCommand
+	 * @param CommandSender $sender
+	 * @param Command $cmd
+	 * @param string $label
+	 * @param array $args
+     * @return bool
+     */
+    public function onCommand(CommandSender $sender, Command $cmd, string $label, array $args) : bool{
         if(!($sender instanceof Player)){
-
-            $sender->sendMessage(TextFormat::RED . "Festival Board Command must be used in-game.");
+            $sender->sendMessage(TextFormat::RED . "Command must be used in-game.");
 			return true;
-
 		}
-
-		if( $cmd->getName() == "festival" || $cmd->getName() == "fc" ) {
-
-            if( $sender->hasPermission("festival2.access" ) ){
-
-                $plug = Server::getInstance()->getPluginManager()->getPlugin("Festival");
-
-                if ($plug === null || $plug->isDisabled() ) {
-
-                    $sender->sendMessage("Festival Board needs Festival plugin (https://github.com/genboy/Festival)");
-                    return true;
-
-                }else{
-
-                    //$sender->sendMessage("This is an Festival Board example"); # Sends to the sender
-                    $this->form->selectForm($sender);
-                    return true;
-
-                }
-
-            }else{
-
-                $sender->sendMessage("No permission to use this!"); # Sends to the sender
-
-            }
-
+		if(!isset($args[0])){
+            $this->form->openUI($sender);
+			return true;
 		}
-	}
+        new Cmd( $sender, $cmd, $label, $args, $this ); // command helper
+		return true;
+    }
+
 
 }
