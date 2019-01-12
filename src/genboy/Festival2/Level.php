@@ -68,7 +68,7 @@ class Level{
 	public function setFlag(string $flag, bool $value) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = $value;
-			$this->plugin->saveAreas();
+			$this->plugin->helper->saveAreas();
 
 			return true;
 		}

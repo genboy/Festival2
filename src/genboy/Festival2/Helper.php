@@ -34,6 +34,100 @@ class Helper {
 
     }
 
+    /** loadLevels
+	 * @file resources/levels.json
+     * @var plugin levels
+	 * @class FeLevel
+     */
+    public function loadLevels(): bool{
+        // create a list of current levels from saved json
+        $ldata = $this->getSource( "levels" );
+        if( isset($ldata) && is_array($ldata) ){
+            foreach($ldata as $level){
+                new FeLevel($level["name"], $level["desc"], $level["flags"], $this->plugin);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /** saveLevels
+	 * @file resources/levels.json
+     * @var plugin levels
+	 * @param array $data
+     */
+    public function saveLevels(): void{
+        // save current levels to json
+        foreach($this->plugin->levels as $level){
+            $levels[] = [ "name" => $level->getName(), "desc" => $level->getDesc(), "flags" => $level->getFlags() ];
+        }
+        $this->saveSource( 'levels', $levels );
+    }
+
+    /** loadAreas
+	 * @file resources/areas.json
+     * @func this getSource
+	 * @var obj FeArea
+	 * @param array $data
+     */
+    public function loadAreas(): bool{
+        // create a list of current areas from saved json
+        $adata = $this->getSource( "areas" );
+        if( isset($adata) && is_array($adata) ){
+            foreach($adata as $area){
+                if( !isset($area["radius"]) ){
+                    $area["radius"] = 0;
+                }
+                new FeArea($area["name"], $area["desc"], $area["flags"], new Vector3($area["pos1"]["0"], $area["pos1"]["1"], $area["pos1"]["2"]), new Vector3($area["pos2"]["0"], $area["pos2"]["1"], $area["pos2"]["2"]), $area["radius"], $area["level"], $area["whitelist"], $area["commands"], $area["events"], $this->plugin);
+            }
+            $this->plugin->getLogger()->info( "Festival has ".count($adata)." area's set!" );
+            $this->saveAreas(); // make sure recent updates are saved
+            return true;
+        }
+        return false;
+    }
+
+    /** Save areas
+	 * @var obj Festival
+	 * @var obj FeArea
+	 * @file areas.json
+	 */
+	public function saveAreas() : void{
+        // save current areas to json
+		$areas = [];
+        foreach($this->plugin->areas as $area){
+            $areas[] = ["name" => $area->getName(), "desc" => $area->getDesc(), "flags" => $area->getFlags(), "pos1" => [$area->getFirstPosition()->getFloorX(), $area->getFirstPosition()->getFloorY(), $area->getFirstPosition()->getFloorZ()] , "pos2" => [$area->getSecondPosition()->getFloorX(), $area->getSecondPosition()->getFloorY(), $area->getSecondPosition()->getFloorZ()], "radius" => $area->getRadius(), "level" => $area->getLevelName(), "whitelist" => $area->getWhitelist(), "commands" => $area->getCommands(), "events" => $area->getEvents()];
+            $this->areaList[strtolower( $area->getName() )] = $area; // name associated area list for inArea check
+        }
+        $this->saveSource( "areas", $areas );
+    }
+
+    /** getAreaListSelected
+     * @func this saveSource []
+     */
+    public function getAreaNameList( $sender = false, $cur = false ){
+        // default array empty
+        $options = [];
+        $slct = 0;
+        $c = 0;
+        foreach( $this->plugin->areas as $nm => $area ){
+            if($cur != false && $sender != false){
+                if( isset( $this->plugin->players[strtolower( $sender->getName() )]["areas"][strtolower( $nm )] )  ){
+                    $slct = $c;
+                }
+            }
+            $options[] = $nm;
+            $c++;
+        }
+        $lst = $options;
+        if($cur != false){
+            $lst = [ $options, $slct ];
+        }
+        return $lst;
+    }
+
+
+
     /** getServerInfo
 	 * @func plugin getServer()
      */
@@ -63,6 +157,17 @@ class Helper {
             } */
         }
         return $worlds;
+    }
+
+
+    /** saveConfig
+	 * @class Helper
+	 * @file resources/config.json
+	 * @param array $data
+     */
+    public function saveConfig( $data ){
+        $this->plugin->config = $data;
+        $this->saveSource( 'config', $data );
     }
 
     /** getSource
@@ -173,7 +278,10 @@ class Helper {
 
         // overwrite default presets
         if( isset( $c['Options']['Msgdisplay'] ) ){
-          $p['options']['msgdsp'] = $c['Options']['Msgdisplay'];
+            $p['options']['msgdsp'] = "off";
+            if( $c['Options']['Msgdisplay'] == true || $c['Options']['Msgdisplay'] == "on" ){
+                $p['options']['msgdsp'] = "on";
+            }
         }
         if( isset( $c['Options']['Msgtype'] ) ){
           $p['options']['msgpos'] = $c['Options']['Msgtype'];
@@ -217,37 +325,7 @@ class Helper {
         return $p;
     }
 
-    /** saveLevels
-	 * @file resources/levels.json
-     * @var plugin levels
-	 * @param array $data
-     */
-    public function saveLevels(): void{
-        // save current levels to json
-        foreach($this->plugin->levels as $level){
-            $levels[] = [ "name" => $level->getName(), "desc" => $level->getDesc(), "flags" => $level->getFlags() ];
-        }
-        $this->saveSource( 'levels', $levels );
-    }
-
-    /** loadLevels
-	 * @file resources/levels.json
-     * @var plugin levels
-	 * @class FeLevel
-     */
-    public function loadLevels(): bool{
-        // create a list of current levels from saved json
-        $ldata = $this->getSource( "levels" );
-        if( isset($ldata) && is_array($ldata) ){
-            foreach($ldata as $level){
-                new FeLevel($level["name"], $level["desc"], $level["flags"], $this->plugin);
-            }
-            return true;
-        }
-        return false;
-    }
-
-      /** loadLevels
+      /** loadDefaultLevels
 	 * @var plugin config
 	 * @file resources/levels.json
 	 * @func plugin getLogger()
@@ -270,40 +348,9 @@ class Helper {
         }
     }
 
-    /** loadAreas
-	 * @file resources/areas.json
-     * @func this getSource
-	 * @var obj FeArea
-	 * @param array $data
+    /** loadDefaultAreas
+     * @func this saveSource []
      */
-    public function loadAreas(): bool{
-        // create a list of current areas from saved json
-        $adata = $this->getSource( "areas" );
-        if( isset($adata) && is_array($adata) ){
-            foreach($adata as $area){
-                new FeArea($area["name"], $area["desc"], $area["flags"], new Vector3($area["pos1"]["0"], $area["pos1"]["1"], $area["pos1"]["2"]), new Vector3($area["pos2"]["0"], $area["pos2"]["1"], $area["pos2"]["2"]), $area["level"], $area["whitelist"], $area["commands"], $area["events"], $this->plugin);
-            }
-            $this->plugin->getLogger()->info( "Festival has ".count($adata)." area's set!" );
-            return true;
-        }
-        return false;
-    }
-
-    /** Save areas
-	 * @var obj Festival
-	 * @var obj FeArea
-	 * @file areas.json
-	 */
-	public function saveAreas() : void{
-        // save current areas to json
-		$areas = [];
-        foreach($this->plugin->areas as $area){
-            $areas[] = ["name" => $area->getName(), "desc" => $area->getDesc(), "flags" => $area->getFlags(), "pos1" => [$area->getFirstPosition()->getFloorX(), $area->getFirstPosition()->getFloorY(), $area->getFirstPosition()->getFloorZ()] , "pos2" => [$area->getSecondPosition()->getFloorX(), $area->getSecondPosition()->getFloorY(), $area->getSecondPosition()->getFloorZ()], "level" => $area->getLevelName(), "whitelist" => $area->getWhitelist(), "commands" => $area->getCommands(), "events" => $area->getEvents()];
-            $this->areaList[strtolower( $area->getName() )] = $area; // name associated area list for inArea check
-        }
-        $this->saveSource( "areas", $areas );
-    }
-
     public function loadDefaultAreas(){
         // default array empty
         $this->saveSource( "areas", [] );
@@ -311,6 +358,10 @@ class Helper {
 
 
 
+    /** isFlag
+     * @param string
+     * @return string
+     */
     public function isFlag( $str ) : string {
         // flag names
         $names = [

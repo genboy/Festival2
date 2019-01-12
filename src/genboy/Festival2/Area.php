@@ -21,6 +21,8 @@ class Area{
 	private $pos1;
 	/** @var Vector3 */
 	private $pos2;
+	/** @var Radius */
+	private $radius;
 	/** @var string */
 	private $levelName;
 	/** @var string[] */
@@ -32,12 +34,13 @@ class Area{
 	/** @var Main */
 	private $plugin;
 
-	public function __construct(string $name, string $desc, array $flags, Vector3 $pos1, Vector3 $pos2, string $levelName, array $whitelist, array $commands, array $events, Festival $plugin){
+	public function __construct(string $name, string $desc, array $flags, Vector3 $pos1, Vector3 $pos2, int $radius, string $levelName, array $whitelist, array $commands, array $events, Festival $plugin){
 		$this->name = strtolower($name);
 		$this->desc = $desc;
 		$this->flags = $flags;
 		$this->pos1 = $pos1;
 		$this->pos2 = $pos2;
+		$this->radius = $radius;
 		$this->levelName = $levelName;
 		$this->whitelist = $whitelist;
 		$this->commands = $commands;
@@ -72,6 +75,20 @@ class Area{
 	 */
 	public function getSecondPosition() : Vector3{
 		return $this->pos2;
+	}
+
+    /**
+	 * @param int
+	 */
+	public function setRadius( $int ) : int{
+		$this->radius = $int;
+	}
+
+	/**
+	 * @return Vector3
+	 */
+	public function getRadius() : int{
+		return $this->radius;
 	}
 
 	/**
@@ -169,9 +186,17 @@ class Area{
 	 * @return bool
 	 */
 	public function contains(Vector3 $pos, string $levelName) : bool{
-		return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
-	}
 
+        if( isset( $this->radius ) &&  $this->radius > 1 ){
+            // in sphere area
+
+        }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
+            // in cube area
+            return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
+        }
+
+
+	}
 
 	/**
 	 * @param Vector3 $pos
@@ -180,16 +205,20 @@ class Area{
 	 */
 	public function centerContains(Vector3 $pos, string $levelName) : bool{
 
-		$cx = $this->pos2->getX() + ( ( $this->pos1->getX() - $this->pos2->getX() ) / 2 );
-		$cz = $this->pos2->getZ() + ( ( $this->pos1->getZ() - $this->pos2->getZ() ) / 2 );
-		$cy1 = min( $this->pos2->getY(), $this->pos1->getY());
-		$cy2 = max( $this->pos2->getY(), $this->pos1->getY());
-		$px = $pos->getX();
-		$py = $pos->getY();
-		$pz = $pos->getZ();
+        if( isset( $this->radius ) &&  $this->radius > 1 ){
+            // in sphere area
 
-		return( $px >= ($cx - 1) && $px <= ($cx + 1) && $pz >= ($cz - 1) && $pz <= ($cz + 1) && $py >= $cy1 && $py <= $cy2 && ($this->levelName === $levelName) );
-		//return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
+        }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
+            $cx = $this->pos2->getX() + ( ( $this->pos1->getX() - $this->pos2->getX() ) / 2 );
+            $cz = $this->pos2->getZ() + ( ( $this->pos1->getZ() - $this->pos2->getZ() ) / 2 );
+            $cy1 = min( $this->pos2->getY(), $this->pos1->getY());
+            $cy2 = max( $this->pos2->getY(), $this->pos1->getY());
+            $px = $pos->getX();
+            $py = $pos->getY();
+            $pz = $pos->getZ();
+            return( $px >= ($cx - 1) && $px <= ($cx + 1) && $pz >= ($cz - 1) && $pz <= ($cz + 1) && $py >= $cy1 && $py <= $cy2 && ($this->levelName === $levelName) );
+        }
+
 	}
 
 	/**

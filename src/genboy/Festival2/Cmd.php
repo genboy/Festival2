@@ -25,7 +25,9 @@ class Cmd{
 	 * @param Festival $plugin
      */
     public function __construct( CommandSender $sender, Command $cmd, string $label, array $args, Festival $plugin){
+
         $this->plugin = $plugin;
+
         if( $cmd->getName() == "fc" ) {
             $playerName = strtolower($sender->getName());
             $action = strtolower($args[0]);

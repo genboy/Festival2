@@ -28,7 +28,6 @@ class Festival extends PluginBase {
 
     public $players;
 
-
     public function onEnable() : void {
 
         $this->getServer()->getPluginManager()->registerEvents( new Events($this), $this );
@@ -42,7 +41,7 @@ class Festival extends PluginBase {
 
     /** dataSetup
 	 * @class Helper
-	 * @func Helper->getSource
+	 * @func Helper getSource
 	 * @var $plugin->options
      */
     public function dataSetup(): bool{
@@ -96,9 +95,9 @@ class Festival extends PluginBase {
 		}
 		if(!isset($args[0])){
             $this->form->openUI($sender);
-			return true;
-		}
-        new Cmd( $sender, $cmd, $label, $args, $this ); // command helper
+		}else{
+            new Cmd( $sender, $cmd, $label, $args, $this ); // command helper
+        }
 		return true;
     }
 
