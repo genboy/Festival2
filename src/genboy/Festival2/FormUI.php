@@ -5,7 +5,7 @@
 namespace genboy\Festival2;
 
 use genboy\Festival2\Festival;
-
+use genboy\Festival2\Area as FeArea;
 use genboy\Festival2\CustomUI\CustomForm;
 use genboy\Festival2\CustomUI\SimpleForm;
 
@@ -56,7 +56,7 @@ class FormUI{
             }
             switch ($data) {
                 case 0:
-                    $this->areaForm( $sender );
+                    $this->areaSelectForm( $sender );
                 break;
                 case 1:
                     $this->levelForm( $sender );
@@ -79,6 +79,55 @@ class FormUI{
         $form->addButton("Area's", 0, "textures/items/sign");
         $form->addButton("Levels", 0, "textures/items/name_tag");
         $form->addButton("Configuration", 0, "textures/blocks/command_block");
+
+        $form->sendToPlayer($sender);
+
+    }
+
+
+     /** areaSelectForm
+     * @class formUI
+	 * @param Player $sender
+	 * @param string $msg
+     */
+    public function areaSelectForm( Player $sender, $msg = false ) : void {
+        $form = new SimpleForm(function ( Player $sender, ?int $data ) {
+            if( $data === null){
+                return;
+            }
+            switch ($data) {
+                case 0:
+                    $this->areaEditForm( $sender );
+                break;
+                case 1:
+                    $this->areaNewForm( $sender ); // new
+                break;
+                case 2:
+                    $this->selectForm( $sender ); // del
+                break;
+                default:
+                    $this->selectForm( $sender );
+                break;
+            }
+            return false;
+        });
+
+        $form->setTitle("Festival Area Manager");
+        if($msg){
+            $form->setContent($msg);
+        }else{
+            $form->setContent("Select an option");
+        }
+
+        // select area
+        $form->addButton("Edit an area", 0, "textures/items/sign");
+
+        // new area
+        $form->addButton("Create new area", 0, "textures/blocks/stonebrick_carved");
+        // delete area
+        $form->addButton("Delete an area", 0, "textures/blocks/command_block");
+
+        $form->addButton("Go back");
 
         $form->sendToPlayer($sender);
 
@@ -164,17 +213,20 @@ class FormUI{
     }
 
 
-    /** areaForm  (prototype function setup)
+    /** areaEditForm
      * @class formUI
 	 * @param Player $sender
 	 * @param string $msg
      */
-    public function areaForm( Player $sender , $inputs = false, $msg = false) : void {
-        if( $inputs != false && isset( $inputs["selectedArea"] ) ){
-            // manage area flags
+    public function areaEditForm( Player $sender , $input = false, $msg = false) : void {
+
+        if( $input != false && isset( $input["selectedArea"] ) ){
+
+            // manage area flags etc.
             $areasnames = $this->plugin->helper->getAreaNameList();
-            $areaname = $areasnames[$inputs["selectedArea"]];
+            $areaname = $areasnames[$input["selectedArea"]];
             $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"] = $areaname;
+
             $form = new CustomForm(function ( Player $sender, ?array $data ) {
                 if( $data === null){
                     return;
@@ -184,9 +236,14 @@ class FormUI{
                     unset( $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"] );
                 }
                 if( isset( $this->plugin->areas[ $areaname ] ) ){
+
                     $area = $this->plugin->areas[ $areaname ];
+
+                    if( isset( $data["newareadesc"] ) && !empty( $data["newareadesc"] ) ){
+                        $area->setDesc( $data["newareadesc"] );
+                    }
+                    $c = 1;
                     $flagset = $area->getFlags();
-                    $c = 0;
                     foreach( $flagset as $nm => $set){
                         if( isset( $data[$c] ) ){
                             $area->setFlag( $nm, $data[$c] );
@@ -203,20 +260,23 @@ class FormUI{
             });
 
             $areasnames = $this->plugin->helper->getAreaNameList();
-            $areaname = $areasnames[$inputs["selectedArea"]];
+            $areaname = $areasnames[$input["selectedArea"]];
             $form->setTitle( TextFormat::DARK_PURPLE . "Manage area " . TextFormat::DARK_PURPLE . $areaname );
+            $form->addInput("Description", "Area description", $this->plugin->areas[$areaname]->getDesc(), "newareadesc" );
             $flgs = $this->plugin->areas[$areaname]->getFlags();
             foreach( $flgs as $flag => $set){
                 $form->addToggle( $flag, $set );
             }
             $form->sendToPlayer($sender);
+
         }else{
+
             // select area
             $form = new CustomForm(function ( Player $sender, ?array $data ) {
                 if( $data === null){
                     return;
                 }
-                $this->areaForm( $sender, $data );
+                $this->areaEditForm( $sender, $data );
                 return false;
             });
             $form->setTitle( TextFormat::DARK_PURPLE . "Manage area's");
@@ -227,9 +287,123 @@ class FormUI{
             $areasnames = $this->plugin->helper->getAreaNameList( $sender, true );
             $options = $areasnames[0];
             $slct = $areasnames[1];
-            $form->addDropdown( "Area select", $options, $slct, "selectedArea");
+            $form->addDropdown( "Select to edit an area", $options, $slct, "selectedArea");
             $form->sendToPlayer($sender);
        }
+    }
+
+    /** areaNewForm
+     * @class formUI
+	 * @param Player $sender
+	 * @param string $msg
+     */
+    public function areaNewForm( Player $sender , $input = false, $msg = false) : void {
+
+        if( $input != false ){
+
+            if( isset($input["type"]) && ( !isset( $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["newname"] ) ||  $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["newname"] == "" ) ){
+
+                $form = new CustomForm(function ( Player $sender, ?ARRAY $data ) {
+                    if( $data === null){
+
+                    }else{
+
+                        if( isset( $data["name"] ) && !isset( $this->plugin->areas[ $data["name"] ] ) ){
+
+                            //check and save area
+                            $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["name"] = $data["name"];
+                            $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["desc"] = $data["desc"];
+
+                            $newarea = $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"];
+                            var_dump($this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]);
+                            unset( $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"] );
+
+                            $newarea["level"] = strtolower( $sender->getLevel()->getName() );
+
+                            if( isset( $this->plugin->levels[ strtolower( $newarea["level"]) ] ) ){
+                                $level = $this->plugin->levels[ strtolower( $newarea["level"]) ];
+                                $newarea["flags"] = $level->getFlags();
+                            }else{
+                                $newarea["flags"] = $this->plugin->defaults;
+                            }
+
+                            new FeArea( $newarea["name"], $newarea["desc"], $newarea["flags"], $newarea["pos1"], $newarea["pos2"], intval( $newarea["radius"] ), $newarea["level"], [], [], [], $this->plugin);
+                            $this->plugin->helper->saveAreas();
+                            $sender->sendMessage("New area named ".$newarea["name"]." created!");
+
+                        }else{
+
+                            $this->areaNewForm( $sender , $data, $msg = "New area name not correct or allready used. Please try another name:");
+
+                        }
+                    }
+                });
+
+                $form->setTitle("Festival Area Maker");
+                if($msg){
+                    $form->addLabel($msg);
+                }else{
+                    $form->addLabel("Create area");
+                }
+                $form->addInput( "Area name", "area name", "", "name" );
+
+                $form->addInput( "Area decription", "area description", "", "desc" );
+
+                $form->sendToPlayer($sender);
+
+
+            }
+        }else{
+
+            $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"] = [];
+            // simple form select cube or sphere
+            $form = new SimpleForm(function ( Player $sender, ?int $data ) {
+                if( $data === null){
+
+                }else{
+                    switch ($data) {
+                        case 0:
+                            $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["type"] = "cube";
+                            $o = TextFormat::GREEN . "Tab position 1 for new cube area (right mouse block place)"; //$o = TextFormat::GREEN . "Please place or break the first position.";
+                            //$this->areaNewForm( $sender, ["type"=>"cube"], "Selecting positions" );
+                            //Server::getInstance()->dispatchCommand($sender, "fc pos1");
+                            $sender->sendMessage($o);
+                        break;
+                        case 1:
+                            $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["type"] = "sphere";
+                            $o = TextFormat::GREEN . "Tab the center position for the new sphere area (right mouse block place)"; //$o = TextFormat::GREEN . "Please place or break the first position.";
+                            //$this->areaNewForm( $sender, ["type"=>"sphere"], "Select centre and radius" ); // new
+                            //Server::getInstance()->dispatchCommand($sender, "fc pos1");
+                            $sender->sendMessage($o);
+                        break;
+                        case 2:
+                            $this->areaSelectForm( $sender ); // goback
+                        break;
+                        default:
+                            $this->areaSelectForm( $sender ); // goback
+                        break;
+                    }
+                }
+            });
+
+            $form->setTitle("Festival Area Maker");
+            if($msg){
+                $form->setContent($msg);
+            }else{
+                $form->setContent("Select new area type");
+            }
+
+            // cube area
+            $form->addButton("Cube area (select 2 positions)");
+
+            // sphere area
+            $form->addButton("Sphere Area (select center and radius)");
+
+            $form->addButton("Go back");
+
+            $form->sendToPlayer($sender);
+
+        }
     }
 
     /** levelForm  (prototype function setup)
@@ -238,6 +412,7 @@ class FormUI{
 	 * @param string $msg
      */
     public function levelForm( Player $sender , $inputs = false, $msg = false) : void {
+
         if( $inputs != false && isset( $inputs["selectedLevel"] ) ){
             // manage level flags
             $levels = $this->plugin->helper->getServerWorlds();
@@ -282,12 +457,13 @@ class FormUI{
 
             $levels =$this->plugin->helper->getServerWorlds();
             $levelname = $levels[$inputs["selectedLevel"]];
-            $form->setTitle( TextFormat::DARK_PURPLE . "Manage level " . TextFormat::DARK_PURPLE . $levelname );
+            $form->setTitle( TextFormat::DARK_PURPLE . "Manage level flags " . TextFormat::DARK_PURPLE . $levelname );
             $flgs = $this->plugin->levels[$levelname]->getFlags();
             foreach( $flgs as $flag => $set){
                 $form->addToggle( $flag, $set );
             }
             $form->sendToPlayer($sender);
+
         }else{
             // select level
             $form = new CustomForm(function ( Player $sender, ?array $data ) {
@@ -310,37 +486,5 @@ class FormUI{
        }
     }
 
-    /** levelsForm
-     * @class formUI
-	 * @param Player $sender
-	 * @param string $msg
-
-    public function levelsForm( Player $sender , $msg = false) : void {
-        $form = new SimpleForm(function ( Player $sender, ?int $data ) {
-            if( $data === null){
-                return;
-            }
-            switch ($data) {
-                case 0:
-                default:
-                $this->selectForm( $sender );
-                break;
-            }
-            return false;
-        });
-
-        $form->setTitle("Manage levels");
-        if($msg){
-            $form->setContent($msg);
-        }else{
-            $form->setContent("Select a world");
-        }
-
-
-        $form->addButton("Levellist", 0, "textures/items/name_tag");
-
-        $form->sendToPlayer($sender);
-
-    }*/
 
 }

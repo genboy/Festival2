@@ -97,7 +97,6 @@ class Helper {
 		$areas = [];
         foreach($this->plugin->areas as $area){
             $areas[] = ["name" => $area->getName(), "desc" => $area->getDesc(), "flags" => $area->getFlags(), "pos1" => [$area->getFirstPosition()->getFloorX(), $area->getFirstPosition()->getFloorY(), $area->getFirstPosition()->getFloorZ()] , "pos2" => [$area->getSecondPosition()->getFloorX(), $area->getSecondPosition()->getFloorY(), $area->getSecondPosition()->getFloorZ()], "radius" => $area->getRadius(), "level" => $area->getLevelName(), "whitelist" => $area->getWhitelist(), "commands" => $area->getCommands(), "events" => $area->getEvents()];
-            $this->areaList[strtolower( $area->getName() )] = $area; // name associated area list for inArea check
         }
         $this->saveSource( "areas", $areas );
     }
@@ -305,17 +304,25 @@ class Helper {
 
         if( isset( $c['Worlds'] ) && is_array( $c['Worlds'] ) ){
 
-
             if( !$this->loadLevels() || !is_array($this->plugin->levels) ){ // might be loaded allready..
 
-                foreach( $c['Worlds'] as $ln => $lvlflags){
-                    $desc = "Festival Area ".$ln;
-                    $newflags = [];
-                    foreach( $lvlflags as $f => $set ){
-                        $flagname = $this->isFlag( $f );
-                        $newflags[$flagname] = $this->isFlag( $f );
+                // create levels: old config levels or default levels
+                $worldlist = $this->plugin->helper->getServerWorlds();
+
+                foreach( $worldlist as $ln){
+                    $desc = "Festival Area ". $ln;
+                    if( isset( $c['Worlds'][ $ln ] ) && is_array( $c['Worlds'][ $ln ] ) ){
+                        $lvlflags = $c['Worlds'][ strtolower($ln) ];
+                        $newflags = [];
+                        foreach( $lvlflags as $f => $set ){
+                            $flagname = $this->isFlag( $f );
+                            $newflags[$flagname] = $set;
+                        }
+                        new FeLevel($ln, $desc, $newflags, $this->plugin);
+                    }else{
+                        $presets = $this->newConfigPreset();
+                        new FeLevel($ln, $desc, $presets['defaults'], $this->plugin);
                     }
-                    new FeLevel($ln, $desc, $newflags, $this->plugin);
                 }
                 $this->saveLevels( $this->plugin->levels );
                 $this->plugin->getLogger()->info( "Festival config.yml level data used" );
@@ -446,5 +453,7 @@ class Helper {
         }
         return $flag;
     }
+
+
 
 }

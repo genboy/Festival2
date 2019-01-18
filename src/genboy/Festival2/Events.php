@@ -6,7 +6,13 @@ namespace genboy\Festival2;
 use genboy\Festival2\Festival;
 
 use pocketmine\event\Listener;
+use pocketmine\Server;
 use pocketmine\utils\TextFormat;
+use pocketmine\math\Vector3;
+use pocketmine\plugin\PluginBase;
+use pocketmine\command\Command;
+use pocketmine\command\CommandSender;
+use pocketmine\command\ConsoleCommandSender;
 
 use pocketmine\Player;
 use pocketmine\event\player\PlayerLoginEvent;
@@ -20,6 +26,9 @@ use pocketmine\event\player\PlayerExhaustEvent;
 use pocketmine\event\player\PlayerDropItemEvent;
 use pocketmine\event\player\PlayerBucketEvent;
 use pocketmine\event\player\PlayerQuitEvent;
+
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\block\BlockPlaceEvent;
 
 
 class Events implements Listener{
@@ -63,11 +72,54 @@ class Events implements Listener{
         }
         $player = $event->getPlayer();
         $cdata = $this->plugin->config;
-        if( $event->getItem()->getID() ==  $cdata['options']['itemid'] ){
+
+        if( $event->getItem()->getID() ==  $cdata['options']['itemid'] && !isset( $this->plugin->players[ strtolower( $player->getName() ) ]["makearea"] ) ) {
             $this->plugin->form->openUI($player);
         }
     }
 
+    /**
+     * @param BlockPlaceEvent $event
+     */
+    public function onBlockPlace(BlockPlaceEvent $event) : void{
+
+		$block = $event->getBlock();
+		$player = $event->getPlayer();
+		$playerName = strtolower($player->getName());
+
+        if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] ) ){
+            $event->setCancelled();
+            $newareatype = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"];
+            if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] ) ){
+
+                $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] = $block->asVector3();
+                $o = TextFormat::GREEN . "Tab position 2 for new ". $newareatype ." area (diagonal end)";
+                if( $newareatype == "sphere"){
+                    $o = TextFormat::GREEN . "Tab distance position(2) to set radius for new ". $newareatype ." area center";
+                }
+                $player->sendMessage($o);
+                return;
+            }else if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] ) ){
+                $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] = $block->asVector3();
+                $p1 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"];
+                $p2 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"];
+                $radius = 0;
+                if( $newareatype == "sphere" ){
+                    $dy = $p1->getY() - $p2->getY();
+                    $dz = $p1->getZ() - $p2->getZ();
+                    $dx = $p1->getX() - $p2->getX();
+                    $df = sqrt( ($dy*$dy)+($dx*$dx) );
+                    $radius = sqrt( ($df*$df)+($dz*$dz) );
+                    $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["radius"] = $radius;
+                }
+                // back to form
+                $this->plugin->form->areaNewForm( $player , ["type"=>$newareatype,"pos1"=>$p1,"pos2"=>$p2,"radius"=>$radius], $msg = "New area setup:");
+                return;
+            }
+
+        }
+
+    }
 
     public function onMove(PlayerMoveEvent $event) : void{
 

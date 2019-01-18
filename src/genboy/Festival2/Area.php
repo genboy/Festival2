@@ -35,7 +35,7 @@ class Area{
 	private $plugin;
 
 	public function __construct(string $name, string $desc, array $flags, Vector3 $pos1, Vector3 $pos2, int $radius, string $levelName, array $whitelist, array $commands, array $events, Festival $plugin){
-		$this->name = strtolower($name);
+		$this->name = $name;
 		$this->desc = $desc;
 		$this->flags = $flags;
 		$this->pos1 = $pos1;
@@ -57,10 +57,24 @@ class Area{
 	}
 
 	/**
+	 * @param string
+	 */
+	public function setName( $str ) : void {
+		$this->name = $str;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getDesc() : string {
 		return $this->desc;
+	}
+
+    /**
+	 * @param string
+	 */
+	public function setDesc( $str ) : void {
+		$this->desc = $str;
 	}
 
 	/**
@@ -187,8 +201,9 @@ class Area{
 	 */
 	public function contains(Vector3 $pos, string $levelName) : bool{
 
-        if( isset( $this->radius ) &&  $this->radius > 1 ){
+        if( isset( $this->radius ) &&  $this->radius > 1 && isset( $this->pos1 ) ){
             // in sphere area
+            return ( $pos->getX() >= ( $this->pos1->getX() - $this->radius ) && $pos->getX() <= ( $this->pos1->getX() + $this->radius ) && $pos->getY() >= ( $this->pos1->getY() - $this->radius ) && $pos->getY() <= ( $this->pos1->getY() + $this->radius ) && $pos->getZ() >= ( $this->pos1->getZ() - $this->radius ) && $pos->getZ() <= ( $this->pos1->getZ() + $this->radius ) );
 
         }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
             // in cube area
@@ -205,8 +220,9 @@ class Area{
 	 */
 	public function centerContains(Vector3 $pos, string $levelName) : bool{
 
-        if( isset( $this->radius ) &&  $this->radius > 1 ){
+        if( isset( $this->radius ) &&  $this->radius > 1 && isset( $this->pos1 ) ){
             // in sphere area
+            return ( $pos->getX() >= ( $this->pos1->getX() - 2 ) && $pos->getX() <= ( $this->pos1->getX() + 2 ) && $pos->getY() >= ( $this->pos1->getY() - 2 ) && $pos->getY() <= ( $this->pos1->getY() + 2 ) && $pos->getZ() >= ( $this->pos1->getZ() - 2 ) && $pos->getZ() <= ( $this->pos1->getZ() + 2 ) );
 
         }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
             $cx = $this->pos2->getX() + ( ( $this->pos1->getX() - $this->pos2->getX() ) / 2 );
@@ -297,7 +313,7 @@ class Area{
 
 	public function delete() : void{
 		unset($this->plugin->areas[$this->getName()]);
-		$this->plugin->data->saveAreas();
+		$this->plugin->helper->saveAreas();
 	}
 
 	public function save() : void{
