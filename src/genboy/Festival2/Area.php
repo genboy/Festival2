@@ -209,8 +209,6 @@ class Area{
             // in cube area
             return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
         }
-
-
 	}
 
 	/**
@@ -287,7 +285,7 @@ class Area{
 		if($value){
 			if(!in_array($name, $this->whitelist)){
 				$this->whitelist[] = $name;
-				$this->plugin->data->saveAreas();
+				$this->plugin->helper->saveAreas();
 
 				return true;
 			}
@@ -295,7 +293,7 @@ class Area{
 			if(in_array($name, $this->whitelist)){
 				$key = array_search($name, $this->whitelist);
 				array_splice($this->whitelist, $key, 1);
-				$this->plugin->data->saveAreas();
+				$this->plugin->helper->saveAreas();
 
 				return true;
 			}

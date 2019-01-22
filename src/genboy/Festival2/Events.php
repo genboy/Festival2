@@ -67,6 +67,7 @@ class Events implements Listener{
      * @param PlayerItemHeldEvent $event
      */
     public function onHold(PlayerItemHeldEvent $event): void { //onItemHeld
+
         if ($event->isCancelled()) {
             return;
         }
@@ -103,15 +104,16 @@ class Events implements Listener{
                 $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] = $block->asVector3();
                 $p1 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"];
                 $p2 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"];
-                $radius = 0;
+
+                $radius = intval( 0 );
                 if( $newareatype == "sphere" ){
                     $dy = $p1->getY() - $p2->getY();
                     $dz = $p1->getZ() - $p2->getZ();
                     $dx = $p1->getX() - $p2->getX();
                     $df = sqrt( ($dy*$dy)+($dx*$dx) );
-                    $radius = sqrt( ($df*$df)+($dz*$dz) );
-                    $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["radius"] = $radius;
+                    $radius = intval(  sqrt( ($df*$df)+($dz*$dz) ) );
                 }
+                $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["radius"] = $radius;
                 // back to form
                 $this->plugin->form->areaNewForm( $player , ["type"=>$newareatype,"pos1"=>$p1,"pos2"=>$p2,"radius"=>$radius], $msg = "New area setup:");
                 return;
@@ -138,9 +140,10 @@ class Events implements Listener{
 
                     // Player leave Area
                     if( isset( $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )] )  ){
-
-                        $msg = "Exit ". $area->getName();
-                        $this->areaMessage( $msg , $player );
+                        if( !$area->getFlag("msg") ){
+                            $msg = "Exit ". $area->getName();
+                            $this->areaMessage( $msg , $player );
+                        }
                         unset($this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )]);
                         break;
                     }
@@ -148,24 +151,30 @@ class Events implements Listener{
                 }else{
                     // Player enter Area
                     if( !isset( $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )] ) ){
-                        $msg = "Enter ". $area->getName();
-                        $this->areaMessage( $msg , $player );
+                        if( !$area->getFlag("msg") ){
+                            $msg = "Enter ". $area->getName();
+                            $this->areaMessage( $msg , $player );
+                        }
                         $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )] = $area;
                         break;
                     }
                     // Player enter Area Center
                     if( $area->centerContains( $player->getPosition(), $player->getLevel()->getName() ) ){
                         if( !isset( $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )."center"] ) ){ // Player enter in Area
-                            $msg = "Enter ". $area->getName(). " center";
-                            $this->areaMessage( $msg , $player );
+                            if( !$area->getFlag("msg") ){
+                                $msg = "Enter ". $area->getName(). " center";
+                                $this->areaMessage( $msg , $player );
+                            }
                             $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )."center"] = $area;
                             break;
                         }
                     }else{
                         // Player leave Area Center
                         if( isset( $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )."center"] ) ){
-                            $msg = "Exit ". $area->getName(). " center";
-                            $this->areaMessage( $msg , $player );
+                            if( !$area->getFlag("msg") ){
+                                $msg = "Exit ". $area->getName(). " center";
+                                $this->areaMessage( $msg , $player );
+                            }
                             unset($this->plugin->players[$playerName]["areas"][strtolower( $area->getName() ). "center"]);
                             break;
                         }
