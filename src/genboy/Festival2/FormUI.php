@@ -490,23 +490,7 @@ class FormUI{
                     }
                     $this->areaWhitelistForm( $sender, false, "Whitelist saved." );
 
-                    /*
-                    if( isset( $data["newPlayer"] )  ){
-                        foreach( $this->plugin->players as $nm => $player){
-                            $p[] = $nm;
-                        }
-                        $area->setWhitelisted( $p[ $data["newPlayer"] ] );
-                        $this->areaWhitelistForm( $sender, false, "Player ".$data["newPlayer"]." added" );
-                        $sender->sendMessage("Form data for whitlelists in development");
-                    }else{
-                        if( isset( $data["removePlayer"] ) ){
-                        $p = $area->getWhitelist();
 
-                        $area->setWhitelisted( $p[ $data["removePlayer"] ], false );
-                        $this->areaWhitelistForm( $sender, false, "Player ".$data["removePlayer"]." removed" );
-                        //$sender->sendMessage("Form data for whitlelists in development");
-                        }
-                    }*/
                 });
 
 
@@ -525,17 +509,8 @@ class FormUI{
                     }
                     $form->addToggle( $nm, $set );
                 }
-                /*
-                $options = $area->getWhitelist();
-                $form->addDropdown( "Remove player", $options, 0, "removePlayer");
 
-                $options2 = [];
-                foreach( $this->plugin->players as $nm => $player){
-                    $options2[] = $nm;
-                }
-                //var_dump($options2);
-                $form->addDropdown( "Add player", $options2, 0, "newPlayer");
-                */
+
 
                 $form->sendToPlayer($sender);
 
@@ -576,8 +551,10 @@ class FormUI{
                         $sender->sendMessage("Form data corrupted or not available, please try again.");
                     }else{
 
-                        if( isset( $data["name"] ) && !isset( $this->plugin->areas[ $data["name"] ] ) ){ // check and save area
-
+                        if( isset( $data["name"] ) && $data["name"] != "" && !isset( $this->plugin->areas[ $data["name"] ] ) ){ // check and save area
+                            if( !isset($data["desc"]) ){
+                                $data["desc"] = $data["name"];
+                            }
                             $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["name"] = $data["name"];
                             $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["desc"] = $data["desc"];
                             $newarea = $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]; //var_dump($newarea);
@@ -596,7 +573,10 @@ class FormUI{
 
                             new FeArea( $newarea["name"], $newarea["desc"], $newarea["flags"], $newarea["pos1"], $newarea["pos2"], $newarea["radius"], $newarea["level"], [], [], [], $this->plugin);
                             $this->plugin->helper->saveAreas();
-                            $sender->sendMessage("New area named ".$newarea["name"]." created!");
+                            //$sender->sendMessage("New area named ".$newarea["name"]." created!");
+
+                            $this->areaSelectForm( $sender, "New area named ".$newarea["name"]." created!"  );
+
                         }else{
                             $this->areaNewForm( $sender , $data, $msg = "New area name not correct or allready used. Please try another name:");
                         }
