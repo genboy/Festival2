@@ -14,6 +14,8 @@ use pocketmine\command\Command;
 use pocketmine\command\CommandSender;
 use pocketmine\utils\TextFormat;
 
+use pocketmine\event\player\PlayerMoveEvent;
+
 class Festival extends PluginBase {
 
     public $config;
@@ -101,5 +103,130 @@ class Festival extends PluginBase {
 		return true;
     }
 
+    /**
+	 * Area event barrier enter
+	 * @param area Area
+	 * @param PlayerMoveEvent $ev
+	 * @return false
+	 */
+	public function barrierEnterArea(Area $area, PlayerMoveEvent $ev): void{
+		$player = $ev->getPlayer();
+        if( $player->isOp() || $area->isWhitelisted( strtolower( $player->getName() )  ) || $player->hasPermission("festival") || $player->hasPermission("festival.access") ){
+            // permission
+            if($area->isWhitelisted( strtolower( $player->getName() )  )){
+                $msg = TextFormat::GREEN .  "Whitelisted enter barrier area" . " " . $area->getName();
+            }else{
+                $msg = TextFormat::GREEN .  "Op enter barrier area" . " " . $area->getName();
+            }
+            $this->players[strtolower( $player->getName() )]["areas"][strtolower( $area->getName() )] = $area;
+            $this->areaMessage( $msg, $player );
+        }else{
+            // barrier
+		    $ev->getPlayer()->teleport($ev->getFrom()); // teleport to previous position
+            if( !$area->getFlag("msg")  || $this->msgOpDsp( $area, $player ) ){
+                if( $this->skippTime( 2, strtolower($player->getName()) ) ){
+                    $msg = TextFormat::YELLOW .  "Cannot enter area" . " " . $area->getName();
+                    $this->areaMessage( $msg, $player );
+                }
+            }
+        }
+		return;
+	}
+
+	/** Area event barrier leave
+	 * @param area Area
+	 * @param PlayerMoveEvent $ev
+	 * @return false
+	 */
+	public function barrierLeaveArea(Area $area, PlayerMoveEvent $ev): void{
+		$player = $ev->getPlayer();
+        if( $player->isOp() || $area->isWhitelisted( strtolower( $player->getName() )  ) || $player->hasPermission("festival") || $player->hasPermission("festival.access") ){
+            // permission
+           if($area->isWhitelisted( strtolower( $player->getName() )  )){
+                $msg = TextFormat::GREEN .  "Whitelisted leave barrier area" . " " . $area->getName();
+            }else{
+                $msg = TextFormat::GREEN .  "Op leave barrier area" . " " . $area->getName();
+            }
+            unset( $this->players[strtolower( $player->getName() )]["areas"][strtolower( $area->getName() )] );
+            $this->areaMessage( $msg, $player );
+        }else{
+            // barrier
+            $ev->getPlayer()->teleport($ev->getFrom()); // teleport to previous position inside area
+            if( !$area->getFlag("msg")  || $this->msgOpDsp( $area, $player ) ){
+                if( $this->skippTime( 2, strtolower($player->getName()) ) ){
+                    $msg = TextFormat::YELLOW . "Cannot leave area" . " " . $area->getName();
+                }
+                if( $msg != ''){
+                    $this->areaMessage( $msg, $player );
+                }
+            }
+        }
+		return;
+	}
+
+    /**
+	 * OpMsg define message persistent display
+	 * @param Area $area
+	 * @param PlayerMoveEvent $ev->getPLayer()
+	 * @param array $options
+	 * @return bool
+	 */
+	public function msgOpDsp( $area, $player ){
+		if( isset( $this->config->options['msgdsp'] ) && $player->isOp() ){
+			if( $this->config->options['msgdsp'] == 'on' ){
+				return true;
+			}else if( $this->config->options['msgdsp'] == 'op' && $area->isWhitelisted(strtolower($player->getName())) ){
+				return true;
+			}else{
+				return false;
+			}
+		}else{
+			return false;
+		}
+	}
+
+    /** skippTime
+	 * delay function for str player $nm repeating int $sec
+	 * @param string $sec
+	  * @return false
+	 */
+    public function skippTime($sec, $nm){
+		$t = false;
+        if(!isset($this->skipsec[$nm])){
+            $this->skipsec[$nm] = time();
+        }else{
+            if( ( ( time() - $sec ) > $this->skipsec[$nm]) || !$this->skipsec[$nm] ){
+                $this->skipsec[$nm] = time();
+                $t = true;
+            }
+        }
+		return $t;
+	}
+
+    /** AreaMessage
+	* define message type
+	 * @param string $msg
+	 * @param PlayerMoveEvent $ev->getPLayer()
+	 * @param array $options
+	 * @return true function
+	 */
+	public function areaMessage( $msg , $player ){
+        $mt = $this->config['options']['msgpos'];
+        switch($mt){
+            case "title":
+                $player->addTitle($msg); // $player->addTitle("Title", "Subtitle", $fadeIn = 20, $duration = 60, $fadeOut = 20);
+            break;
+            case "tip":
+                $player->sendTip($msg);
+            break;
+            case "title":
+                $player->sendPopup($msg);
+            break;
+            case "msg":
+            default:
+                $player->sendMessage($msg);
+            break;
+		}
+	}
 
 }

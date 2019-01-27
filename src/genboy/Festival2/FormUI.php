@@ -468,19 +468,15 @@ class FormUI{
                     if( $data === null){
                         return;
                     }
-
-
                     if( isset( $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"] ) ){
                         $areaname = $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"];
                         $area = $this->plugin->areas[strtolower($areaname)];
                         unset( $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"] );
                     }
-
                     $players = $this->plugin->players;
                     $list = $area->getWhitelist();
                     $c = 0;
                     foreach( $players as $nm => $player){
-
                         if( $data[$c] ){
                             var_dump($data[$c]);
                             $area->setWhitelisted($nm);
@@ -499,7 +495,6 @@ class FormUI{
                 if($msg){
                     $form->addLabel( $msg);
                 }
-
                 $players = $this->plugin->players;
                 $list = $area->getWhitelist();
                 foreach( $players as $nm => $player){
@@ -509,11 +504,7 @@ class FormUI{
                     }
                     $form->addToggle( $nm, $set );
                 }
-
-
-
                 $form->sendToPlayer($sender);
-
 
         }else{
 
@@ -527,6 +518,8 @@ class FormUI{
             $form->setTitle( TextFormat::DARK_PURPLE . "Manage area whitelist");
             if($msg){
                 $form->addLabel( $msg);
+            }else{
+                $form->addLabel( "Select whitelist area");
             }
             $areasnames = $this->plugin->helper->getAreaNameList( $sender, true );
             $options = $areasnames[0];
@@ -573,8 +566,6 @@ class FormUI{
 
                             new FeArea( $newarea["name"], $newarea["desc"], $newarea["flags"], $newarea["pos1"], $newarea["pos2"], $newarea["radius"], $newarea["level"], [], [], [], $this->plugin);
                             $this->plugin->helper->saveAreas();
-                            //$sender->sendMessage("New area named ".$newarea["name"]." created!");
-
                             $this->areaSelectForm( $sender, "New area named ".$newarea["name"]." created!"  );
 
                         }else{
@@ -604,12 +595,12 @@ class FormUI{
                     switch ($data) {
                         case 0:
                             $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["type"] = "cube";
-                            $o = TextFormat::GREEN . "Tab position 1 for new cube area (right mouse block place)"; //$o = TextFormat::GREEN . "Please place or break the first position.";
+                            $o = TextFormat::GREEN . "Tab position 1 for new cube area (right mouse block place)";
                             $sender->sendMessage($o);
                         break;
                         case 1:
                             $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]["type"] = "sphere";
-                            $o = TextFormat::GREEN . "Tab the center position for the new sphere area (right mouse block place)"; //$o = TextFormat::GREEN . "Please place or break the first position.";
+                            $o = TextFormat::GREEN . "Tab the center position for the new sphere area (right mouse block place)";
                             $sender->sendMessage($o);
                         break;
                         case 2:
@@ -681,6 +672,8 @@ class FormUI{
             $form->setTitle( TextFormat::DARK_PURPLE . "Delete an area");
             if($msg){
                 $form->addLabel( $msg);
+            }else{
+                $form->addLabel( "Select area to delete");
             }
             $areasnames = $this->plugin->helper->getAreaNameList( $sender, true );
             $options = $areasnames[0];
@@ -742,6 +735,7 @@ class FormUI{
             $levels =$this->plugin->helper->getServerWorlds();
             $levelname = $levels[$inputs["selectedLevel"]];
             $form->setTitle( TextFormat::DARK_PURPLE . "Manage level flags " . TextFormat::DARK_PURPLE . $levelname );
+
             $flgs = $this->plugin->levels[$levelname]->getFlags();
             foreach( $flgs as $flag => $set){
                 $form->addToggle( $flag, $set );
@@ -759,6 +753,8 @@ class FormUI{
             $form->setTitle( TextFormat::DARK_PURPLE . "Manage levels");
             if( $msg ){
                 $form->addLabel( $msg );
+            }else{
+                $form->addLabel( "Select level to edit flags");
             }
             $levels = $this->plugin->helper->getServerWorlds();
             $current = strtolower( $sender->getLevel()->getName() );
