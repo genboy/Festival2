@@ -705,8 +705,8 @@ class FormUI{
                     $levelname = $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"];
                     unset( $this->plugin->players[ strtolower( $sender->getName() ) ]["edit"] );
                 }
-                if( isset( $this->plugin->levels[ $levelname ] ) ){
-                    $lvl = $this->plugin->levels[ $levelname ];
+                if( isset( $this->plugin->levels[ strtolower($levelname) ] ) ){
+                    $lvl = $this->plugin->levels[ strtolower($levelname) ];
                     $flagset = $lvl->getFlags();
                     $c = 0;
                     foreach( $flagset as $nm => $set){
@@ -721,7 +721,7 @@ class FormUI{
                 }else{
                     // add new level configs?
                     $worlds = $this->plugin->helper->getServerWorlds();
-                    if( in_array( $levelname, $worlds ) ){
+                    if( in_array( strtolower($levelname), $worlds ) ){
                         var_dump($data);
                         $this->levelForm( $sender, false, "Level ". $levelname . " not found! Try again, select an option" );
 
@@ -736,7 +736,7 @@ class FormUI{
             $levelname = $levels[$inputs["selectedLevel"]];
             $form->setTitle( TextFormat::DARK_PURPLE . "Manage level flags " . TextFormat::DARK_PURPLE . $levelname );
 
-            $flgs = $this->plugin->levels[$levelname]->getFlags();
+            $flgs = $this->plugin->levels[strtolower($levelname)]->getFlags();
             foreach( $flgs as $flag => $set){
                 $form->addToggle( $flag, $set );
             }
