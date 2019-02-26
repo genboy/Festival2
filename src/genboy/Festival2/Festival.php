@@ -219,7 +219,7 @@ class Festival extends PluginBase {
             case "tip":
                 $player->sendTip($msg);
             break;
-            case "title":
+            case "pop":
                 $player->sendPopup($msg);
             break;
             case "msg":

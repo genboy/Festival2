@@ -82,9 +82,9 @@ class FormUI{
         }
 
         // teleport to area
-        $form->addButton("Teleport to an area", 0, "textures/items/sign");
-        $form->addButton("Area's", 0, "textures/blocks/stonebrick_carved");
-        $form->addButton("Levels", 0, "textures/items/name_tag");
+        $form->addButton("Area Teleport", 0, "textures/items/sign");
+        $form->addButton("Area Management", 0, "textures/blocks/stonebrick_carved");
+        $form->addButton("Level Management", 0, "textures/items/name_tag");
         $form->addButton("Configuration", 0, "textures/blocks/command_block");
 
         $form->sendToPlayer($sender);
@@ -178,10 +178,11 @@ class FormUI{
             $areadsp_opt = ["on", "op", "off"];
             $this->plugin->config["options"]["areadsp"] = $areadsp_opt[ $data["areadsp"] ];
 
-            $newautolist = "off";
+            /*$newautolist = "off";
             if(  $data["autolist"] == true){
                 $newautolist = "on";
-            }
+            }*/
+            $this->plugin->config["options"]["autolist"] =  $data["autolist"];
 
             $c = 5; // after 5 options all input are flags
             foreach( $this->plugin->config["defaults"] as $flag => $set){
@@ -218,7 +219,7 @@ class FormUI{
         $form->addStepSlider( $areadsp_tlt, $areadsp_opt, $areadsp_slc, "areadsp" );
 
         $autolist = false;
-        if( $optionset["autolist"] == "on"){
+        if( $optionset["autolist"] != false){
             $autolist = true;
         }
         $form->addToggle("Auto whitelist", $autolist, "autolist" );
@@ -405,12 +406,6 @@ class FormUI{
                     }
                 }
             }
-
-            $form->addLAbel( "-------- Delete command: --------");
-
-            $form->addInput("Type id here to delete:", "input command id to delete", "", "delcommand" );
-
-
             $form->addLAbel( "-------- Add new command: --------");
 
             $msgdsp_tlt = "Add command event type";
@@ -418,6 +413,13 @@ class FormUI{
             $form->addStepSlider( $msgdsp_tlt, $msgdsp_opt, 0, "newcommandevent" );
 
             $form->addInput("New command:", "add new Command (without / )", "", "newcommand" );
+
+
+            $form->addLAbel( "-------- Delete command: --------");
+
+            $form->addInput("Type id here to delete:", "input command id to delete", "", "delcommand" );
+
+
             $form->sendToPlayer($sender);
 
 
@@ -757,7 +759,7 @@ class FormUI{
                 $form->addLabel( "Select level to edit flags");
             }
             $levels = $this->plugin->helper->getServerWorlds();
-            $current = strtolower( $sender->getLevel()->getName() );
+            $current = $sender->getLevel()->getName();
             $slct = array_search( $current, $levels);
             $form->addDropdown( "Level select", $levels, $slct, "selectedLevel");
             $form->sendToPlayer($sender);
