@@ -4,12 +4,10 @@
 
 namespace genboy\Festival2;
 
+use genboy\Festival2\Festival;
+
 use pocketmine\level\Level;
 use pocketmine\math\Vector3;
-
-use genboy\Festival2\Language;
-use genboy\Festival2\Level;
-use genboy\Festival2\Flag;
 
 class Area{
 
@@ -23,6 +21,8 @@ class Area{
 	private $pos1;
 	/** @var Vector3 */
 	private $pos2;
+	/** @var Radius */
+	private $radius;
 	/** @var string */
 	private $levelName;
 	/** @var string[] */
@@ -34,12 +34,13 @@ class Area{
 	/** @var Main */
 	private $plugin;
 
-	public function __construct(string $name, string $desc, array $flags, Vector3 $pos1, Vector3 $pos2, string $levelName, array $whitelist, array $commands, array $events, Main $plugin){
-		$this->name = strtolower($name);
+	public function __construct(string $name, string $desc, array $flags, Vector3 $pos1, Vector3 $pos2, int $radius, string $levelName, array $whitelist, array $commands, array $events, Festival $plugin){
+		$this->name = $name;
 		$this->desc = $desc;
 		$this->flags = $flags;
 		$this->pos1 = $pos1;
 		$this->pos2 = $pos2;
+		$this->radius = $radius;
 		$this->levelName = $levelName;
 		$this->whitelist = $whitelist;
 		$this->commands = $commands;
@@ -56,10 +57,24 @@ class Area{
 	}
 
 	/**
+	 * @param string
+	 */
+	public function setName( $str ) : void {
+		$this->name = $str;
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getDesc() : string {
 		return $this->desc;
+	}
+
+    /**
+	 * @param string
+	 */
+	public function setDesc( $str ) : void {
+		$this->desc = $str;
 	}
 
 	/**
@@ -74,6 +89,20 @@ class Area{
 	 */
 	public function getSecondPosition() : Vector3{
 		return $this->pos2;
+	}
+
+    /**
+	 * @param int
+	 */
+	public function setRadius( $int ) : int{
+		$this->radius = $int;
+	}
+
+	/**
+	 * @return Vector3
+	 */
+	public function getRadius() : int{
+		return $this->radius;
 	}
 
 	/**
@@ -102,13 +131,12 @@ class Area{
 	public function setFlag(string $flag, bool $value) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = $value;
-			$this->plugin->saveAreas();
-
 			return true;
 		}
 
 		return false;
 	}
+
 
 	/**
 	 * @return string[]
@@ -125,7 +153,6 @@ class Area{
 			}
 		}
 		return $arr;
-
 	}
 
 	/**
@@ -173,9 +200,16 @@ class Area{
 	 * @return bool
 	 */
 	public function contains(Vector3 $pos, string $levelName) : bool{
-		return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
-	}
 
+        if( isset( $this->radius ) &&  $this->radius > 1 && isset( $this->pos1 ) ){
+            // in sphere area
+            return ( $pos->getX() >= ( $this->pos1->getX() - $this->radius ) && $pos->getX() <= ( $this->pos1->getX() + $this->radius ) && $pos->getY() >= ( $this->pos1->getY() - $this->radius ) && $pos->getY() <= ( $this->pos1->getY() + $this->radius ) && $pos->getZ() >= ( $this->pos1->getZ() - $this->radius ) && $pos->getZ() <= ( $this->pos1->getZ() + $this->radius ) );
+
+        }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
+            // in cube area
+            return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
+        }
+	}
 
 	/**
 	 * @param Vector3 $pos
@@ -184,16 +218,21 @@ class Area{
 	 */
 	public function centerContains(Vector3 $pos, string $levelName) : bool{
 
-		$cx = $this->pos2->getX() + ( ( $this->pos1->getX() - $this->pos2->getX() ) / 2 );
-		$cz = $this->pos2->getZ() + ( ( $this->pos1->getZ() - $this->pos2->getZ() ) / 2 );
-		$cy1 = min( $this->pos2->getY(), $this->pos1->getY());
-		$cy2 = max( $this->pos2->getY(), $this->pos1->getY());
-		$px = $pos->getX();
-		$py = $pos->getY();
-		$pz = $pos->getZ();
+        if( isset( $this->radius ) &&  $this->radius > 1 && isset( $this->pos1 ) ){
+            // in sphere area
+            return ( $pos->getX() >= ( $this->pos1->getX() - 2 ) && $pos->getX() <= ( $this->pos1->getX() + 2 ) && $pos->getY() >= ( $this->pos1->getY() - 2 ) && $pos->getY() <= ( $this->pos1->getY() + 2 ) && $pos->getZ() >= ( $this->pos1->getZ() - 2 ) && $pos->getZ() <= ( $this->pos1->getZ() + 2 ) );
 
-		return( $px >= ($cx - 1) && $px <= ($cx + 1) && $pz >= ($cz - 1) && $pz <= ($cz + 1) && $py >= $cy1 && $py <= $cy2 && ($this->levelName === $levelName) );
-		//return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
+        }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
+            $cx = $this->pos2->getX() + ( ( $this->pos1->getX() - $this->pos2->getX() ) / 2 );
+            $cz = $this->pos2->getZ() + ( ( $this->pos1->getZ() - $this->pos2->getZ() ) / 2 );
+            $cy1 = min( $this->pos2->getY(), $this->pos1->getY());
+            $cy2 = max( $this->pos2->getY(), $this->pos1->getY());
+            $px = $pos->getX();
+            $py = $pos->getY();
+            $pz = $pos->getZ();
+            return( $px >= ($cx - 1) && $px <= ($cx + 1) && $pz >= ($cz - 1) && $pz <= ($cz + 1) && $py >= $cy1 && $py <= $cy2 && ($this->levelName === $levelName) );
+        }
+
 	}
 
 	/**
@@ -203,7 +242,7 @@ class Area{
 	public function toggleFlag(string $flag) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = !$this->flags[$flag];
-			$this->plugin->saveAreas();
+			$this->plugin->data->saveAreas();
 
 			return $this->flags[$flag];
 		}
@@ -246,7 +285,7 @@ class Area{
 		if($value){
 			if(!in_array($name, $this->whitelist)){
 				$this->whitelist[] = $name;
-				$this->plugin->saveAreas();
+				$this->plugin->helper->saveAreas();
 
 				return true;
 			}
@@ -254,7 +293,7 @@ class Area{
 			if(in_array($name, $this->whitelist)){
 				$key = array_search($name, $this->whitelist);
 				array_splice($this->whitelist, $key, 1);
-				$this->plugin->saveAreas();
+				$this->plugin->helper->saveAreas();
 
 				return true;
 			}
@@ -272,7 +311,7 @@ class Area{
 
 	public function delete() : void{
 		unset($this->plugin->areas[$this->getName()]);
-		$this->plugin->saveAreas();
+		$this->plugin->helper->saveAreas();
 	}
 
 	public function save() : void{
