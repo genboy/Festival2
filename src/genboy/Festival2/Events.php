@@ -8,6 +8,7 @@ use genboy\Festival2\Festival;
 use pocketmine\event\Listener;
 use pocketmine\Server;
 use pocketmine\utils\TextFormat;
+use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\plugin\PluginBase;
 use pocketmine\command\Command;
@@ -29,6 +30,10 @@ use pocketmine\event\player\PlayerQuitEvent;
 
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
+
+
+use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
 
 
 class Events implements Listener{
@@ -79,6 +84,22 @@ class Events implements Listener{
         }
     }
 
+    /** onHurt
+	 * @param EntityDamageEvent $event
+	 * @ignoreCancelled true
+	 */
+	public function onHurt(EntityDamageEvent $event) : void{
+		$this->plugin->canDamage( $event );
+	}
+
+	/** onDamage
+	 * @param EntityDamageEvent $event
+	 * @ignoreCancelled true
+	 */
+	public function onDamage(EntityDamageEvent $event) : void{
+		$this->plugin->canDamage( $event );
+	}
+
     /**
      * @param BlockPlaceEvent $event
      */
@@ -119,9 +140,95 @@ class Events implements Listener{
                 return;
             }
 
+        }else{
+
+            // block type allowed?
+
+            // edit allowed?
+            if(!$this->plugin->canEdit($player, $block)){
+				$event->setCancelled();
+			}
+
         }
 
     }
+
+
+	/** Block break
+	 * @param BlockBreakEvent $event
+	 * @ignoreCancelled true
+	 */
+	public function onBlockBreak(BlockBreakEvent $event) : void{
+
+		$block = $event->getBlock();
+		$player = $event->getPlayer();
+		$playerName = strtolower($player->getName());
+
+		if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] ) ){
+            $event->setCancelled();
+            $newareatype = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"];
+            if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] ) ){
+
+                $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] = $block->asVector3();
+                $o = TextFormat::GREEN . "Tab position 2 for new ". $newareatype ." area (diagonal end)";
+                if( $newareatype == "sphere"){
+                    $o = TextFormat::GREEN . "Tab distance position(2) to set radius for new ". $newareatype ." area center";
+                }
+                $player->sendMessage($o);
+                return;
+            }else if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] ) ){
+                $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] = $block->asVector3();
+                $p1 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"];
+                $p2 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"];
+
+                $radius = intval( 0 );
+                if( $newareatype == "sphere" ){
+                    $dy = $p1->getY() - $p2->getY();
+                    $dz = $p1->getZ() - $p2->getZ();
+                    $dx = $p1->getX() - $p2->getX();
+                    $df = sqrt( ($dy*$dy)+($dx*$dx) );
+                    $radius = intval(  sqrt( ($df*$df)+($dz*$dz) ) );
+                }
+                $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["radius"] = $radius;
+                // back to form
+                $this->plugin->form->areaNewForm( $player , ["type"=>$newareatype,"pos1"=>$p1,"pos2"=>$p2,"radius"=>$radius], $msg = "New area setup:");
+                return;
+            }
+
+        }else{
+
+            // block type allowed?
+
+            // edit allowed?
+            if(!$this->plugin->canEdit($player, $block)){
+				$event->setCancelled();
+			}
+
+        }
+	}
+	/** onBlockTouch
+	 * @param PlayerInteractEvent $event
+	 * @ignoreCancelled true
+	 */
+	public function onBlockTouch(PlayerInteractEvent $event) : void{
+		$block = $event->getBlock();
+		$player = $event->getPlayer();
+		if(!$this->plugin->canTouch($player, $block )){
+			$event->setCancelled();
+		}
+	}
+	/** onInteract
+	 * @param PlayerInteractEvent $event
+	 * @ignoreCancelled true
+
+    public function onInteract( PlayerInteractEvent $event ): void{
+        if ( !$this->canInteract( $event ) ) {
+            $event->setCancelled();
+        }
+    }
+    */
+
+
 
     public function onMove(PlayerMoveEvent $event) : void{
 

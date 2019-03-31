@@ -242,7 +242,7 @@ class Area{
 	public function toggleFlag(string $flag) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = !$this->flags[$flag];
-			$this->plugin->data->saveAreas();
+			$this->plugin->helper->saveAreas();
 
 			return $this->flags[$flag];
 		}

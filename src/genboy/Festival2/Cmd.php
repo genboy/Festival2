@@ -77,7 +77,7 @@ class Cmd{
 
                 case "form": // festival 2
                 default:
-                    $this->getUIForm();
+                    $this->getUIForm($sender);
                 break;
 
             }
@@ -90,7 +90,7 @@ class Cmd{
 	 * @class FormUI
 	 * @func FormUI->openUI
      */
-    public function getUIForm(){
+    public function getUIForm($sender){
         $this->plugin->form->openUI($sender);
     }
 

@@ -55,7 +55,7 @@ class Level{
 	 */
 	public function getFlag(string $flag) : bool{
 		if(isset($this->flags[$flag])){
-			return $this->flags[$flag];
+			return true; //$this->flags[$flag];
 		}
 		return false;
 	}
@@ -68,7 +68,7 @@ class Level{
 	public function setFlag(string $flag, bool $value) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = $value;
-			$this->plugin->helper->saveAreas();
+			$this->plugin->helper->saveLevels();
 
 			return true;
 		}
@@ -83,7 +83,7 @@ class Level{
 	public function toggleFlag(string $flag) : bool{
 		if(isset($this->flags[$flag])){
 			$this->flags[$flag] = !$this->flags[$flag];
-			$this->plugin->saveAreas();
+			$this->plugin->helper->saveLevels();
 
 			return $this->flags[$flag];
 		}
@@ -107,7 +107,7 @@ class Level{
 
 	public function delete() : void{
 		unset($this->plugin->levels[$this->getName()]);
-		$this->plugin->data->saveLevels();
+		$this->plugin->helper->saveLevels();
 	}
 
 	public function save() : void{

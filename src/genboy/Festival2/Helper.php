@@ -399,7 +399,7 @@ class Helper {
         if( in_array( $str, $names ) ) {
             $flag = $str;
             if( $str == "save" || $str == "hurt" || $str == "god"){
-                $flag = "hurt";
+                $flag = "god";
             }
             if( $str == "fly" || $str == "flight"){
                 $flag = "flight";

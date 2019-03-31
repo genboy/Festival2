@@ -8,6 +8,8 @@ use genboy\Festival2\Helper;
 use genboy\Festival2\FormUI;
 use genboy\Festival2\Events;
 
+use pocketmine\level\Position;
+use pocketmine\math\Vector3;
 use pocketmine\plugin\PluginBase;
 use pocketmine\Player;
 use pocketmine\command\Command;
@@ -15,6 +17,9 @@ use pocketmine\command\CommandSender;
 use pocketmine\utils\TextFormat;
 
 use pocketmine\event\player\PlayerMoveEvent;
+
+use pocketmine\event\entity\EntityDamageEvent;
+use pocketmine\event\entity\EntityDamageByEntityEvent;
 
 class Festival extends PluginBase {
 
@@ -64,8 +69,6 @@ class Festival extends PluginBase {
                 $this->config = $this->helper->newConfigPreset();
                 $this->getLogger()->info( "Festival config.yml not found, default configurations loaded!" );
             }
-
-
         }
         $this->helper->saveSource( "config", $this->config );
 
@@ -163,6 +166,169 @@ class Festival extends PluginBase {
         }
 		return;
 	}
+
+
+
+
+    /** Player Damage Impact
+	 * @param EntityDamageEvent $event
+	 * @ignoreCancelled true
+     */
+	public function canDamage(EntityDamageEvent $ev) : bool{
+        if($ev->getEntity() instanceof Player){
+			$player = $ev->getEntity();
+			$playerName = strtolower($player->getName());
+
+			if( !$this->canGetHurt( $player ) ){
+                if( $player->isOnFire() ){
+                    $player->extinguish();
+                }
+				$ev->setCancelled();
+                //$this->areaMessage( 'You can not get hurt..', $player );
+                return false;
+			}
+            /*
+            if( !$this->canBurn( $player->getPosition() )){
+                if( $player->isOnFire() ){
+                    $player->extinguish(); // 1.0.7-dev
+				    $ev->setCancelled();
+                    return false;
+                }
+			}
+            if(!$this->canPVP($ev)){ // v 1.0.6-13
+				$ev->setCancelled();
+                return false;
+			}
+			if( isset($this->playerTP[$playerName]) && $this->playerTP[$playerName] == true ){
+				unset( $this->playerTP[$playerName] ); //$this->areaMessage( 'Fall save off', $player );
+				$ev->setCancelled();
+                return false;
+			}
+            */
+            //$this->areaMessage( 'You can get hurt..', $player );
+		}
+
+        return true;
+    }
+
+    /** Hurt
+	 * @param Entity $entity
+	 * @return bool
+	 */
+	public function canGetHurt(Player $player) : bool{
+		$o = true;
+        if( $player instanceof Player){
+            $g = (isset($this->levels[ strtolower( $player->getLevel()->getName() ) ]) ? $this->levels[ strtolower( $player->getLevel()->getName() ) ]->getFlag("god") : $this->defaults['god']);
+            if($g){
+                $o = false;
+            }
+            $playername =  strtolower($player->getName());
+
+            foreach ($this->areas as $area) {
+                if ($area->contains(new Vector3($player->getX(), $player->getY(), $player->getZ()), $player->getLevel()->getName() )) {
+                    if($area->getFlag("god")){
+                        $o = false;
+                    }
+                    if(!$area->getFlag("god") && $g ){
+                        $o = true;
+                    }
+                    if($area->isWhitelisted($playername)){
+                        $o = false;
+                    }
+                }
+            }
+
+        }
+		return $o;
+	}
+
+
+
+    /** pvp */
+    /** flight */
+
+
+	/** canEdit
+	 * @param Player   $player
+	 * @param Position $position
+	 * @return bool
+	 */
+	public function canEdit(Player $player, Position $position) : bool{
+		if($player->hasPermission("festival") || $player->hasPermission("festival.access")){
+			return true;
+		}
+		$o = true;
+		$e = (isset($this->levels[ strtolower( $position->getLevel()->getName() ) ]) ? $this->levels[ strtolower( $position->getLevel()->getName() ) ]->getFlag("edit") : $this->defaults['edit']);
+		if($e){
+			$o = false;
+		}
+        $playername = strtolower($player->getName());
+        foreach ($this->areas as $area) {
+            if ($area->contains(new Vector3($position->getX(), $position->getY(), $position->getZ()), $position->getLevel()->getName() )) {
+                if($area->getFlag("edit")){
+                    $o = false;
+                }
+                if(!$area->getFlag("edit") && $e){
+                    $o = true;
+                }
+                if($area->isWhitelisted($playername)){
+                    $o = true;
+                }
+            }
+        }
+		return $o;
+	}
+
+
+	/** canTouch
+	 * @param Player   $player
+	 * @param Position $position
+	 * @return bool
+	 */
+	public function canTouch(Player $player, Position $position) : bool{
+		if($player->hasPermission("festival") || $player->hasPermission("festival.access")){
+			return true;
+		}
+        $playername = strtolower($player->getName());
+		$o = true;
+		$t = (isset($this->levels[ strtolower( $position->getLevel()->getName() ) ]) ? $this->levels[ strtolower( $position->getLevel()->getName() ) ]->getFlag("touch") : $this->defaults['touch']);
+
+		if($t){
+			$o = false;
+		}
+        foreach ($this->areas as $area) {
+            if ($area->contains(new Vector3($position->getX(), $position->getY(), $position->getZ()), $position->getLevel()->getName() )) {
+                if($area->getFlag("touch")){
+                    $o = false;
+                }
+                if(!$area->getFlag("touch") && $t){
+                    $o = true;
+                }
+                if($area->isWhitelisted($playername)){
+                    $o = true;
+                }
+            }
+        }
+		return $o;
+	}
+
+
+
+    /** mobs */
+    /** animals */
+    /** effects */
+    /** msg */
+    /** passage */
+    /** drop */
+    /** explode */
+    /** tnt */
+    /** fire */
+    /** shoot */
+    /** hunger */
+    /** perms */
+    /** falldamage */
+    /** cmdmode */
+
 
     /**
 	 * OpMsg define message persistent display
