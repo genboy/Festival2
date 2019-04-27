@@ -76,41 +76,40 @@ class Cmd{
                 break;
 
                 case "tp":
-				if (!isset($args[1])){
-					//$o = TextFormat::RED . "You must specify an existing Area name";
-                    $o = TextFormat::RED . "Please specify teleport destination area";
-					break;
-				}
-                if( isset( $this->plugin->areas[strtolower($args[1])] ) ){
-                    $area = $this->plugin->areas[strtolower($args[1])];
-                    $position = $sender->getPosition();
-                    $perms = (isset($this->plugin->levels[$position->getLevel()->getName()]) ? $this->plugin->levels[ $position->getLevel()->getName() ]->getFlag('perms') : $this->plugin->defaults['perms']);
-                    if( $perms || $area->isWhitelisted($playerName) || $sender->hasPermission("festival") || $sender->hasPermission("festival.command") || $sender->hasPermission("festival.command.fe.tp")){
-                        $levelName = $area->getLevelName();
-                        if( isset($levelName) && Server::getInstance()->loadLevel($levelName) != false){ //$this->plugin->getServer()->getLevelByName($levelName) != false ){ // ? Server::getInstance()->getLevealByName($levelName)
-                            $o = TextFormat::GREEN .'Teleporting to area ' . $args[1];
-                            $cx = $area->getSecondPosition()->getX() + ( ( $area->getFirstPosition()->getX() - $area->getSecondPosition()->getX() ) / 2 );
-                            $cz = $area->getSecondPosition()->getZ() + ( ( $area->getFirstPosition()->getZ() - $area->getSecondPosition()->getZ() ) / 2 );
-                            $cy1 = min( $area->getSecondPosition()->getY(), $area->getFirstPosition()->getY());
-                            $cy2 = max( $area->getSecondPosition()->getY(), $area->getFirstPosition()->getY());
-                            /*if( !$this->hasFallDamage($sender) ){
-                                $this->playerTP[$playerName] = true; // player tp active $this->areaMessage( 'Fall save on!', $sender );
-                            }*/
-                            $sender->teleport( new Position( $cx, $cy2 - 2, $cz, $area->getLevel() ) );
+                    if (!isset($args[1])){
+                        //$o = TextFormat::RED . "You must specify an existing Area name";
+                        $o = TextFormat::RED . "Please specify teleport destination area";
+                        break;
+                    }
+                    if( isset( $this->plugin->areas[strtolower($args[1])] ) ){
+                        $area = $this->plugin->areas[strtolower($args[1])];
+                        $position = $sender->getPosition();
+                        $perms = (isset($this->plugin->levels[$position->getLevel()->getName()]) ? $this->plugin->levels[ $position->getLevel()->getName() ]->getFlag('perms') : $this->plugin->defaults['perms']);
+                        if( $perms || $area->isWhitelisted($playerName) || $sender->hasPermission("festival") || $sender->hasPermission("festival.command") || $sender->hasPermission("festival.command.fc.tp")){
+                            $levelName = $area->getLevelName();
+                            if( isset($levelName) && Server::getInstance()->loadLevel($levelName) != false){ //$this->plugin->getServer()->getLevelByName($levelName) != false ){ // ? Server::getInstance()->getLevealByName($levelName)
+                                $o = TextFormat::GREEN .'Teleporting to area ' . $area->getName();
+                                $cx = $area->getSecondPosition()->getX() + ( ( $area->getFirstPosition()->getX() - $area->getSecondPosition()->getX() ) / 2 );
+                                $cz = $area->getSecondPosition()->getZ() + ( ( $area->getFirstPosition()->getZ() - $area->getSecondPosition()->getZ() ) / 2 );
+                                $cy1 = min( $area->getSecondPosition()->getY(), $area->getFirstPosition()->getY());
+                                $cy2 = max( $area->getSecondPosition()->getY(), $area->getFirstPosition()->getY());
+                                /*if( !$this->hasFallDamage($sender) ){
+                                    $this->playerTP[$playerName] = true; // player tp active $this->areaMessage( 'Fall save on!', $sender );
+                                }*/
+                                $sender->teleport( new Position( $cx, $cy2 - 2, $cz, $area->getLevel() ) );
+                            }else{
+                                // level problem
+                                $o = 'The Area level '.$levelName.' is not available';
+                            }
                         }else{
-                            // level problem
-                            $o = 'The Area level '.$levelName.' is not available';
+                            // no permissions
+                            $o = 'You do not have permission to use this';
                         }
                     }else{
-                        // no permissions
-                        $o = 'You do not have permission to use this';
+                        // area problem
+                        $o = 'The target Area not found or an argument is missing';
                     }
-                }else{
-                    // area problem
-                    $o = 'The target Area not found or an argument is missing';
-                }
                 break;
-
 
                 case "form": // festival 2
                 default:

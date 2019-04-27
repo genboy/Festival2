@@ -555,7 +555,7 @@ class FormUI{
                             $newarea = $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"]; //var_dump($newarea);
                             unset( $this->plugin->players[ strtolower( $sender->getName() ) ]["makearea"] );
 
-                            $newarea["level"] = strtolower( $sender->getLevel()->getName() );
+                            $newarea["level"] = $sender->getLevel()->getName(); // full levelname incl. uppercase etc.
                             if( $newarea["type"] == "cube" ){
                                 $newarea["radius"] = 0;
                             }
@@ -782,21 +782,12 @@ class FormUI{
                     $selectlist[]= strtolower( $area->getName() );
                 }
                 if(  $selectlist[ $data[0] - 1 ] ){
-                    $areaname = $selectlist[ $data[0] - 1 ]; //Server::getInstance()->dispatchCommand($sender, "fe tp ".$areaname );
-                    $area = $this->plugin->areas[$areaname];
-                    $o = TextFormat::GREEN . 'Teleporting to area' . $area->getName();
-                     $sender->sendMessage($o);
-                            $cx = $area->getSecondPosition()->getX() + ( ( $area->getFirstPosition()->getX() - $area->getSecondPosition()->getX() ) / 2 );
-                            $cz = $area->getSecondPosition()->getZ() + ( ( $area->getFirstPosition()->getZ() - $area->getSecondPosition()->getZ() ) / 2 );
-                            $cy1 = min( $area->getSecondPosition()->getY(), $area->getFirstPosition()->getY());
-                            $cy2 = max( $area->getSecondPosition()->getY(), $area->getFirstPosition()->getY());
-                            //if( !$this->hasFallDamage($sender) ){
-                                //$this->playerTP[$playerName] = true; // player tp active $this->areaMessage( 'Fall save on!', $sender );
-                            //}
-                            $sender->teleport( new Position( $cx, $cy2 - 2, $cz, $area->getLevel() ) );
+                    $areaname = $selectlist[ $data[0] - 1 ];
+                    Server::getInstance()->dispatchCommand($sender, "fc tp ".$areaname );
                 }
             }
         });
+
         $form->setTitle("Teleport to Area");
         $selectlist = array();
         $selectlist[]= "Select destination area";

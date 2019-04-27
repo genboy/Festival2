@@ -121,11 +121,14 @@ class Events implements Listener{
      */
     public function onBlockPlace(BlockPlaceEvent $event) : void{
 
+        $cdata = $this->plugin->config;
 		$block = $event->getBlock();
 		$player = $event->getPlayer();
 		$playerName = strtolower($player->getName());
+        $itemhand = $player->getInventory()->getItemInHand();
 
-        if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] ) ){
+        if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] )
+          && $itemhand->getID() ==  $cdata['options']['itemid'] ){ // ? holding Festival tool
             $event->setCancelled();
             $newareatype = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"];
             if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] ) ){
@@ -176,11 +179,14 @@ class Events implements Listener{
 	 */
 	public function onBlockBreak(BlockBreakEvent $event) : void{
 
+        $cdata = $this->plugin->config;
 		$block = $event->getBlock();
 		$player = $event->getPlayer();
 		$playerName = strtolower($player->getName());
+        $itemhand = $player->getInventory()->getItemInHand();
 
-		if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] ) ){ // add here the item-tool check
+		if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] )
+            && $itemhand->getID() ==  $cdata['options']['itemid'] ){ // ? holding Festival tool
             $event->setCancelled();
             $newareatype = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"];
             if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] ) ){ // add here the item-tool check
@@ -302,7 +308,7 @@ class Events implements Listener{
                         break;
                     }
 
-                }else{
+                }else if( $area->contains( $player->getPosition(), $player->getLevel()->getName() ) ){
                     // Player enter Area
                     if( !isset( $this->plugin->players[$playerName]["areas"][strtolower( $area->getName() )] ) ){
 

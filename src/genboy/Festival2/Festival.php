@@ -367,13 +367,15 @@ class Festival extends PluginBase {
                 if ($a) {
                     $o = false;
                 }
-                foreach ($this->areas as $area) {
-                    if ($area->contains(new Vector3($pos->getX(), $pos->getY(), $pos->getZ()), $pos->getLevel()->getName() )) {
-                        if ($area->getFlag("animals")) {
-                            $o = false;
-                        }
-                        if(!$area->getFlag("animals") && $a){
-                            $o = true;
+                if( is_array( $this->areas) ){
+                    foreach ($this->areas as $area) {
+                        if ($area->contains(new Vector3($pos->getX(), $pos->getY(), $pos->getZ()), $pos->getLevel()->getName() )) {
+                            if ($area->getFlag("animals")) {
+                                $o = false;
+                            }
+                            if(!$area->getFlag("animals") && $a){
+                                $o = true;
+                            }
                         }
                     }
                 }
@@ -383,13 +385,15 @@ class Festival extends PluginBase {
                 if ($m) {
                     $o = false;
                 }
-                foreach ($this->areas as $area) {
-                    if ($area->contains(new Vector3($pos->getX(), $pos->getY(), $pos->getZ()), $pos->getLevel()->getName() )) {
-                        if ($area->getFlag("mobs")) {
-                            $o = false;
-                        }
-                        if(!$area->getFlag("mobs") && $m){
-                            $o = true;
+                if( is_array( $this->areas) ){
+                    foreach ($this->areas as $area) {
+                        if ($area->contains(new Vector3($pos->getX(), $pos->getY(), $pos->getZ()), $pos->getLevel()->getName() )) {
+                            if ($area->getFlag("mobs")) {
+                                $o = false;
+                            }
+                            if(!$area->getFlag("mobs") && $m){
+                                $o = true;
+                            }
                         }
                     }
                 }

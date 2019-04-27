@@ -201,13 +201,25 @@ class Area{
 	 */
 	public function contains(Vector3 $pos, string $levelName) : bool{
 
-        if( isset( $this->radius ) &&  $this->radius > 1 && isset( $this->pos1 ) ){
+        if( isset( $this->radius ) &&  $this->radius > 0 && isset( $this->pos1 ) ){
             // in sphere area
-            return ( $pos->getX() >= ( $this->pos1->getX() - $this->radius ) && $pos->getX() <= ( $this->pos1->getX() + $this->radius ) && $pos->getY() >= ( $this->pos1->getY() - $this->radius ) && $pos->getY() <= ( $this->pos1->getY() + $this->radius ) && $pos->getZ() >= ( $this->pos1->getZ() - $this->radius ) && $pos->getZ() <= ( $this->pos1->getZ() + $this->radius ) );
+            return ( $pos->getX() >= ( $this->pos1->getX() - $this->radius )
+                && $pos->getX() <= ( $this->pos1->getX() + $this->radius )
+                && $pos->getY() >= ( $this->pos1->getY() - $this->radius )
+                && $pos->getY() <= ( $this->pos1->getY() + $this->radius )
+                && $pos->getZ() >= ( $this->pos1->getZ() - $this->radius )
+                && $pos->getZ() <= ( $this->pos1->getZ() + $this->radius )
+                && strtolower( $this->levelName ) === strtolower( $levelName ) );
 
         }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
             // in cube area
-            return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX()) && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX()) && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY()) && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY()) && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ()) && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ()) && ($this->levelName === $levelName));
+            return ((min($this->pos1->getX(), $this->pos2->getX()) <= $pos->getX())
+                && (max($this->pos1->getX(), $this->pos2->getX()) >= $pos->getX())
+                && (min($this->pos1->getY(), $this->pos2->getY()) <= $pos->getY())
+                && (max($this->pos1->getY(), $this->pos2->getY()) >= $pos->getY())
+                && (min($this->pos1->getZ(), $this->pos2->getZ()) <= $pos->getZ())
+                && (max($this->pos1->getZ(), $this->pos2->getZ()) >= $pos->getZ())
+                &&  strtolower( $this->levelName ) === strtolower( $levelName ) );
         }
 	}
 
@@ -220,7 +232,13 @@ class Area{
 
         if( isset( $this->radius ) &&  $this->radius > 1 && isset( $this->pos1 ) ){
             // in sphere area
-            return ( $pos->getX() >= ( $this->pos1->getX() - 2 ) && $pos->getX() <= ( $this->pos1->getX() + 2 ) && $pos->getY() >= ( $this->pos1->getY() - 2 ) && $pos->getY() <= ( $this->pos1->getY() + 2 ) && $pos->getZ() >= ( $this->pos1->getZ() - 2 ) && $pos->getZ() <= ( $this->pos1->getZ() + 2 ) );
+            return ( $pos->getX() >= ( $this->pos1->getX() - 2 )
+                && $pos->getX() <= ( $this->pos1->getX() + 2 )
+                && $pos->getY() >= ( $this->pos1->getY() - 2 )
+                && $pos->getY() <= ( $this->pos1->getY() + 2 )
+                && $pos->getZ() >= ( $this->pos1->getZ() - 2 )
+                && $pos->getZ() <= ( $this->pos1->getZ() + 2 )
+                && strtolower( $this->levelName ) === strtolower( $levelName ) );
 
         }else if( isset( $this->pos1 ) && isset( $this->pos2 ) ){
             $cx = $this->pos2->getX() + ( ( $this->pos1->getX() - $this->pos2->getX() ) / 2 );
@@ -230,7 +248,8 @@ class Area{
             $px = $pos->getX();
             $py = $pos->getY();
             $pz = $pos->getZ();
-            return( $px >= ($cx - 1) && $px <= ($cx + 1) && $pz >= ($cz - 1) && $pz <= ($cz + 1) && $py >= $cy1 && $py <= $cy2 && ($this->levelName === $levelName) );
+            return( $px >= ($cx - 1) && $px <= ($cx + 1) && $pz >= ($cz - 1) && $pz <= ($cz + 1) && $py >= $cy1 && $py <= $cy2
+            && strtolower( $this->levelName ) === strtolower( $levelName ) );
         }
 
 	}
