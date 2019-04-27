@@ -28,12 +28,28 @@ use pocketmine\event\player\PlayerDropItemEvent;
 use pocketmine\event\player\PlayerBucketEvent;
 use pocketmine\event\player\PlayerQuitEvent;
 
+
+use pocketmine\entity\object\ExperienceOrb;
+use pocketmine\entity\object\ItemEntity;
+use pocketmine\entity\object\FallingBlock;
+use pocketmine\entity\object\FallingSand;
+use pocketmine\entity\object\PrimedTNT;
+use pocketmine\entity\projectile\Arrow;
+use pocketmine\entity\projectile\Projectile;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\block\BlockPlaceEvent;
-
-
+use pocketmine\event\block\BlockUpdateEvent;
+use pocketmine\event\block\BlockBurnEvent;
+use pocketmine\event\entity\EntitySpawnEvent;
+use pocketmine\event\entity\EntityDespawnEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityExplodeEvent;
+use pocketmine\event\entity\EntityShootBowEvent;
+use pocketmine\event\entity\EntityLevelChangeEvent;
+use pocketmine\level\particle\FloatingTextParticle;
+
+
 
 
 class Events implements Listener{
@@ -164,10 +180,10 @@ class Events implements Listener{
 		$player = $event->getPlayer();
 		$playerName = strtolower($player->getName());
 
-		if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] ) ){
+		if( isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"] ) ){ // add here the item-tool check
             $event->setCancelled();
             $newareatype = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["type"];
-            if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] ) ){
+            if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] ) ){ // add here the item-tool check
 
                 $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"] = $block->asVector3();
                 $o = TextFormat::GREEN . "Tab position 2 for new ". $newareatype ." area (diagonal end)";
@@ -176,7 +192,7 @@ class Events implements Listener{
                 }
                 $player->sendMessage($o);
                 return;
-            }else if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] ) ){
+            }else if( !isset( $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] ) ){ // add here the item-tool check
                 $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"] = $block->asVector3();
                 $p1 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos1"];
                 $p2 = $this->plugin->players[ strtolower( $playerName ) ]["makearea"]["pos2"];
@@ -227,6 +243,29 @@ class Events implements Listener{
         }
     }
     */
+
+    /** Mob / Animal spawning
+	 * @param EntitySpawnEvent $event
+	 * @ignoreCancelled true
+     */
+    public function onEntitySpawn( EntitySpawnEvent $event ): void{
+        $e = $event->getEntity();
+        //($e instanceof Fire && !$this->canBurn( $e->getPosition() )) || (
+        if( !$e instanceof Player && !$this->plugin->canEntitySpawn( $e ) ){
+            //$e->flagForDespawn() to slow / ? $e->close(); private..
+            $this->plugin->getServer()->getPluginManager()->callEvent(new EntityDespawnEvent($e));
+            $e->despawnFromAll();
+            if($e->chunk !== null){
+                $e->chunk->removeEntity($e);
+                $e->chunk = null;
+            }
+            if($e->isValid()){
+                $e->level->removeEntity($e);
+                $e->setLevel(null);
+            }
+        }
+    }
+
 
 
 

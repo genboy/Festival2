@@ -1,6 +1,7 @@
-# Festival2
+# Festival2 
 Pocketmine Festival 2 plugin - the remake project
-
+Genboy Copyright 2019.  
+Be aware this version is the commercial version of Festival, as stated in the COPYRIGHT file.
 Actually, a complete new setup to provide better control and less overhead, ingame and incode.
 
 So this where it's at;

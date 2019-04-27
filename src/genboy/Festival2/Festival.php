@@ -8,6 +8,7 @@ use genboy\Festival2\Helper;
 use genboy\Festival2\FormUI;
 use genboy\Festival2\Events;
 
+use pocketmine\Server;
 use pocketmine\level\Position;
 use pocketmine\math\Vector3;
 use pocketmine\plugin\PluginBase;
@@ -18,8 +19,25 @@ use pocketmine\utils\TextFormat;
 
 use pocketmine\event\player\PlayerMoveEvent;
 
+use pocketmine\entity\object\ExperienceOrb;
+use pocketmine\entity\object\ItemEntity;
+use pocketmine\entity\object\FallingBlock;
+use pocketmine\entity\object\FallingSand;
+use pocketmine\entity\object\PrimedTNT;
+use pocketmine\entity\projectile\Arrow;
+use pocketmine\entity\projectile\Projectile;
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\block\BlockPlaceEvent;
+use pocketmine\event\block\BlockUpdateEvent;
+use pocketmine\event\block\BlockBurnEvent;
+use pocketmine\event\entity\EntitySpawnEvent;
+use pocketmine\event\entity\EntityDespawnEvent;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityExplodeEvent;
+use pocketmine\event\entity\EntityShootBowEvent;
+use pocketmine\event\entity\EntityLevelChangeEvent;
+use pocketmine\level\particle\FloatingTextParticle;
 
 class Festival extends PluginBase {
 
@@ -314,8 +332,78 @@ class Festival extends PluginBase {
 
 
 
-    /** mobs */
-    /** animals */
+    /** mobs  & animals */
+    /** canEntitySpawn
+	 * @param Entity $e
+	 * @return bool
+    */
+    public function canEntitySpawn( $e ): bool{
+        $o = true;
+        if( // what entities are always allowed
+            $e instanceof FallingBlock // FallingBlock (Sand,Gravel, Water, Lava? )// $e instanceof FallingSand
+            || $e instanceof PrimedTNT
+            || $e instanceof ExperienceOrb
+            || $e instanceof ItemEntity
+            || $e instanceof Projectile
+            || $e instanceof FloatingTextParticle
+            //|| $e instanceof mysterybox\entity\MysterySkull // https://github.com/CubePM/MysteryBox/blob/master/src/mysterybox/entity/MysterySkull.php
+        ){
+            return $o; // might be allowed to spawn under different flag
+        }
+
+        $nm =  ''; //
+        if( method_exists($e,'getName') && null !== $e->getName() ){
+          $nm = $e instanceof Item ? $e->getItem()->getName() : $e->getName();
+        }
+        $pos = false;
+        if( method_exists($e,'getPosition') && null !== $e->getPosition() ){
+            $pos = $e->getPosition();
+        }
+        if($pos && $nm != ''){
+            $animals =[ 'bat','chicken','cow','horse','llama','donkey','mule','ocelot','parrot','fish','dolphin','squit','pig','rabbit','sheep','pufferfish','salmon','turtle','tropical_fish','cod','balloon'];
+            if( in_array( strtolower($nm), $animals ) ){
+                // check animal flag
+                $a = (isset($this->levels[$pos->getLevel()->getName()]) ? $this->levels[$pos->getLevel()->getName()]->getFlag("animals") : $this->defaults['animals']);
+                if ($a) {
+                    $o = false;
+                }
+                foreach ($this->areas as $area) {
+                    if ($area->contains(new Vector3($pos->getX(), $pos->getY(), $pos->getZ()), $pos->getLevel()->getName() )) {
+                        if ($area->getFlag("animals")) {
+                            $o = false;
+                        }
+                        if(!$area->getFlag("animals") && $a){
+                            $o = true;
+                        }
+                    }
+                }
+            }else{
+                // check mob flag
+                $m = (isset($this->levels[$pos->getLevel()->getName()]) ? $this->levels[$pos->getLevel()->getName()]->getFlag("mobs") : $this->defaults['mobs']);
+                if ($m) {
+                    $o = false;
+                }
+                foreach ($this->areas as $area) {
+                    if ($area->contains(new Vector3($pos->getX(), $pos->getY(), $pos->getZ()), $pos->getLevel()->getName() )) {
+                        if ($area->getFlag("mobs")) {
+                            $o = false;
+                        }
+                        if(!$area->getFlag("mobs") && $m){
+                            $o = true;
+                        }
+                    }
+                }
+            }
+        }
+        /* if($o){
+            $this->getLogger()->info( 'Spawn '.$nm.' entity allowed' );
+        }else{
+            $this->getLogger()->info( 'Spawn '.$nm.' entity canceled' );
+        } */
+        return $o;
+    }
+
+
     /** effects */
     /** msg */
     /** passage */
